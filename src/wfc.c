@@ -2,7 +2,7 @@
 
 #include "wfc.h"
 #include "bitfield.h"
-#include "utils.h"
+/* #include "utils.h" */
 #include "md5.h"
 
 #include <stdio.h>
@@ -70,7 +70,7 @@ wfc_clone_into(wfc_blocks_ptr *const restrict ret_ptr, uint64_t seed, const wfc_
     *ret_ptr       = ret;
 }
 
-entropy_location
+uint64_t
 blk_min_entropy(const wfc_blocks_ptr blocks, uint32_t gx, uint32_t gy)
 {
     vec2 the_location   = { 0 };

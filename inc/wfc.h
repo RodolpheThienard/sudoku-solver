@@ -51,7 +51,7 @@ void blk_print(FILE *const, const wfc_blocks_ptr block, uint32_t gx, uint32_t gy
 void grd_print(FILE *const, const wfc_blocks_ptr block);
 
 // Entropy functions
-entropy_location blk_min_entropy(const wfc_blocks_ptr block, uint32_t gx, uint32_t gy);
+uint64_t blk_min_entropy(const wfc_blocks_ptr block, uint32_t gx, uint32_t gy);
 uint8_t entropy_compute(uint64_t);
 uint64_t entropy_collapse_state(uint64_t, uint32_t, uint32_t, uint32_t, uint32_t, uint64_t, uint64_t);
 
