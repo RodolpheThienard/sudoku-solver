@@ -43,7 +43,7 @@ grd_at(wfc_blocks_ptr blocks, uint32_t gx, uint32_t gy)
 static inline uint64_t *
 blk_at(wfc_blocks_ptr blocks, uint32_t gx, uint32_t gy, uint32_t x, uint32_t y)
 {
-    return 0;
+    return blocks[gy * blocks->grid_side * blocks->block_side * blocks->block_side + gx * blocks->block_side + y * blocks->block_side * blocks->grid_side + x].states;
 }
 
 // Printing functions
