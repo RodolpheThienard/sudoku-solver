@@ -10,13 +10,15 @@
 /// Size of the MD5 buffer
 #define MD5_BUFFER ((uint32_t)1024)
 
-struct md5_ctx {
-    struct {
-        unsigned int A, B, C, D;
-    } regs;
-    uint8_t buf[MD5_BUFFER];
-    uint32_t size;
-    uint32_t bits;
+struct md5_ctx
+{
+  struct
+  {
+    unsigned int A, B, C, D;
+  } regs;
+  uint8_t buf[MD5_BUFFER];
+  uint32_t size;
+  uint32_t bits;
 };
 
 /// Basic md5 functions
@@ -28,10 +30,14 @@ struct md5_ctx {
 /// Rotate left 32 bits values (words)
 #define ROTATE_LEFT(w, s) ((w << s) | ((w & 0xFFFFFFFF) >> (32 - s)))
 
-#define FF(a, b, c, d, x, s, t) (a = b + ROTATE_LEFT((a + F(b, c, d) + x + t), s))
-#define GG(a, b, c, d, x, s, t) (a = b + ROTATE_LEFT((a + G(b, c, d) + x + t), s))
-#define HH(a, b, c, d, x, s, t) (a = b + ROTATE_LEFT((a + H(b, c, d) + x + t), s))
-#define II(a, b, c, d, x, s, t) (a = b + ROTATE_LEFT((a + I(b, c, d) + x + t), s))
+#define FF(a, b, c, d, x, s, t)                                               \
+  (a = b + ROTATE_LEFT ((a + F (b, c, d) + x + t), s))
+#define GG(a, b, c, d, x, s, t)                                               \
+  (a = b + ROTATE_LEFT ((a + G (b, c, d) + x + t), s))
+#define HH(a, b, c, d, x, s, t)                                               \
+  (a = b + ROTATE_LEFT ((a + H (b, c, d) + x + t), s))
+#define II(a, b, c, d, x, s, t)                                               \
+  (a = b + ROTATE_LEFT ((a + I (b, c, d) + x + t), s))
 
 #define S11 7
 #define S12 12
@@ -50,8 +56,10 @@ struct md5_ctx {
 #define S43 15
 #define S44 21
 
-#define GET_UINT32(a, b, i) \
-    (a) = ((unsigned int)(b)[(i)]) | ((unsigned int)(b)[(i) + 1] << 8) | ((unsigned int)(b)[(i) + 2] << 16) | ((unsigned int)(b)[(i) + 3] << 24)
+#define GET_UINT32(a, b, i)                                                   \
+  (a) = ((unsigned int)(b)[(i)]) | ((unsigned int)(b)[(i) + 1] << 8)          \
+        | ((unsigned int)(b)[(i) + 2] << 16)                                  \
+        | ((unsigned int)(b)[(i) + 3] << 24)
 
 // local functions
 // clang-format off
@@ -71,105 +79,110 @@ static unsigned char MD5_PADDING[64] = { /* 512 Bits */
 // clang-format on
 
 void
-md5(uint8_t *const restrict M, uint32_t len, uint8_t *restrict digest)
+md5 (uint8_t *const restrict M, uint32_t len, uint8_t *restrict digest)
 {
-    const uint32_t buflen  = (len > MD5_BUFFER) ? MD5_BUFFER : len;
-    struct md5_ctx context = {
-        .size   = 0,
-        .bits   = 0,
-        .regs.A = 0x67452301,
-        .regs.B = 0xefcdab89,
-        .regs.C = 0x98badcfe,
-        .regs.D = 0x10325476,
-    };
+  const uint32_t buflen = (len > MD5_BUFFER) ? MD5_BUFFER : len;
+  struct md5_ctx context = {
+    .size = 0,
+    .bits = 0,
+    .regs.A = 0x67452301,
+    .regs.B = 0xefcdab89,
+    .regs.C = 0x98badcfe,
+    .regs.D = 0x10325476,
+  };
 
-    do {
-        memcpy(context.buf + context.size, M + context.bits, buflen - context.size);
-        context.size += buflen - context.size;
-        md5_update(&context);
-    } while (len - context.bits > 64);
+  do
+    {
+      memcpy (context.buf + context.size, M + context.bits,
+              buflen - context.size);
+      context.size += buflen - context.size;
+      md5_update (&context);
+    }
+  while (len - context.bits > 64);
 
-    md5_final(digest, &context);
+  md5_final (digest, &context);
 }
 
 /// uint32_t is bytes while the size at the end of the message is in bits...
 static void
-md5_addsize(uint8_t *restrict M, uint32_t index, uint32_t oldlen)
+md5_addsize (uint8_t *restrict M, uint32_t index, uint32_t oldlen)
 {
-    assert(((index * 8) % 512) == 448); /* If padding is not done then exit */
+  assert (((index * 8) % 512) == 448); /* If padding is not done then exit */
 
-    M[index++] = (uint8_t)((oldlen << 3) & 0xFF);
-    M[index++] = (uint8_t)((oldlen >> 5) & 0xFF);
-    M[index++] = (uint8_t)((oldlen >> 13) & 0xFF);
-    M[index++] = (uint8_t)((oldlen >> 21) & 0xFF);
+  M[index++] = (uint8_t)((oldlen << 3) & 0xFF);
+  M[index++] = (uint8_t)((oldlen >> 5) & 0xFF);
+  M[index++] = (uint8_t)((oldlen >> 13) & 0xFF);
+  M[index++] = (uint8_t)((oldlen >> 21) & 0xFF);
 
-    /* Fill with 0 because uint32_t is 32 bits long */
-    M[index++] = 0;
-    M[index++] = 0;
-    M[index++] = 0;
-    M[index++] = 0;
+  /* Fill with 0 because uint32_t is 32 bits long */
+  M[index++] = 0;
+  M[index++] = 0;
+  M[index++] = 0;
+  M[index++] = 0;
 }
 
 static void
-md5_update(struct md5_ctx *restrict context)
+md5_update (struct md5_ctx *restrict context)
 {
-    uint8_t buffer[64] = { 0 }; /* 512 bits */
-    uint32_t i         = 0;
+  uint8_t buffer[64] = { 0 }; /* 512 bits */
+  uint32_t i = 0;
 
-    for (i = 0; context->size - i > 63; i += 64) {
-        memcpy(buffer, context->buf + i, 64);
-        md5_encode(buffer, context);
-        context->bits += 64;
+  for (i = 0; context->size - i > 63; i += 64)
+    {
+      memcpy (buffer, context->buf + i, 64);
+      md5_encode (buffer, context);
+      context->bits += 64;
     }
-    memcpy(buffer, context->buf + i, context->size - i);
-    memcpy(context->buf, buffer, context->size - i);
-    context->size -= i;
+  memcpy (buffer, context->buf + i, context->size - i);
+  memcpy (context->buf, buffer, context->size - i);
+  context->size -= i;
 }
 
 static void
-md5_final(uint8_t *restrict digest, struct md5_ctx *restrict context)
+md5_final (uint8_t *restrict digest, struct md5_ctx *restrict context)
 {
-    uint8_t buffer[64] = { 0 }; /* 512 bits */
-    uint32_t i         = 0;
+  uint8_t buffer[64] = { 0 }; /* 512 bits */
+  uint32_t i = 0;
 
-    assert(context->size < 64);
+  assert (context->size < 64);
 
-    if (context->size + 1 > 56) {
-        memcpy(buffer, context->buf, context->size);
-        memcpy(buffer + context->size, MD5_PADDING, 64 - context->size);
-        md5_encode(buffer, context);
-        context->bits += context->size;
-        context->size = 0;
-        memset(buffer, '\0', 56);
-        md5_addsize(buffer, 56, context->bits);
-        md5_encode(buffer, context);
-    } else {
-        memcpy(buffer, context->buf, context->size);
-        context->bits += context->size;
-        memcpy(buffer + context->size, MD5_PADDING, 56 - context->size);
-        md5_addsize(buffer, 56, context->bits);
-        md5_encode(buffer, context);
+  if (context->size + 1 > 56)
+    {
+      memcpy (buffer, context->buf, context->size);
+      memcpy (buffer + context->size, MD5_PADDING, 64 - context->size);
+      md5_encode (buffer, context);
+      context->bits += context->size;
+      context->size = 0;
+      memset (buffer, '\0', 56);
+      md5_addsize (buffer, 56, context->bits);
+      md5_encode (buffer, context);
+    }
+  else
+    {
+      memcpy (buffer, context->buf, context->size);
+      context->bits += context->size;
+      memcpy (buffer + context->size, MD5_PADDING, 56 - context->size);
+      md5_addsize (buffer, 56, context->bits);
+      md5_encode (buffer, context);
     }
 
-    // update digest
-    // clang-format off
+  // update digest
+  // clang-format off
     for (i = 0; i <  4; i++) digest[i] = (uint8_t)((context->regs.A >> ((i -  0) * 8)) & 0xFF);
     for (;      i <  8; i++) digest[i] = (uint8_t)((context->regs.B >> ((i -  4) * 8)) & 0xFF);
     for (;      i < 12; i++) digest[i] = (uint8_t)((context->regs.C >> ((i -  8) * 8)) & 0xFF);
     for (;      i < 16; i++) digest[i] = (uint8_t)((context->regs.D >> ((i - 12) * 8)) & 0xFF);
-    // clang-format on
+  // clang-format on
 }
 
 static void
-md5_encode(uint8_t *restrict buffer, struct md5_ctx *restrict context)
+md5_encode (uint8_t *restrict buffer, struct md5_ctx *restrict context)
 {
-    uint32_t a = context->regs.A,
-             b = context->regs.B,
-             c = context->regs.C,
-             d = context->regs.D;
-    uint32_t x[16];
+  uint32_t a = context->regs.A, b = context->regs.B, c = context->regs.C,
+           d = context->regs.D;
+  uint32_t x[16];
 
-    // clang-format off
+  // clang-format off
     GET_UINT32(x[ 0], buffer,  0);
     GET_UINT32(x[ 1], buffer,  4);
     GET_UINT32(x[ 2], buffer,  8);
@@ -259,10 +272,10 @@ md5_encode(uint8_t *restrict buffer, struct md5_ctx *restrict context)
     II(d, a, b, c, x[11], S42, 0xbd3af235); /* 62 */
     II(c, d, a, b, x[ 2], S43, 0x2ad7d2bb); /* 63 */
     II(b, c, d, a, x[ 9], S44, 0xeb86d391); /* 64 */
-    // clang-format on
+  // clang-format on
 
-    context->regs.A += a;
-    context->regs.B += b;
-    context->regs.C += c;
-    context->regs.D += d;
+  context->regs.A += a;
+  context->regs.B += b;
+  context->regs.C += c;
+  context->regs.D += d;
 }
