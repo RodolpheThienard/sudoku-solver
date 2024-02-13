@@ -111,11 +111,9 @@ blk_filter_mask_for_column (wfc_blocks_ptr blocks, uint32_t gy, uint32_t y,
 {
    for (uint32_t gx = 0; gx < blocks->grid_side; gx++)
     {
-      uint64_t *restrict states = blocks->states + gx * blocks->block_side * blocks->grid_side * blocks->block_side + gy * blocks->block_side;
       for (uint32_t x = 0; x < blocks->block_side; x++)
         {
-          uint64_t *restrict state = states + x * blocks->grid_side + y;
-          *state &= ~(1ull << collapsed);
+          *blk_at (blocks, gx, gy, x, y) &= ~(1ull << collapsed);
         }
     } 
   return 0;
