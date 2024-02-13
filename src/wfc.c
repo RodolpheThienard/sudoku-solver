@@ -84,13 +84,30 @@ wfc_clone_into (wfc_blocks_ptr *const restrict ret_ptr, uint64_t seed,
   *ret_ptr = ret;
 }
 
+// Return the block with the minimum entropy
 uint64_t
 blk_min_entropy (const wfc_blocks_ptr blocks, uint32_t gx, uint32_t gy)
 {
   vec2 the_location = { 0 };
   uint8_t min_entropy = UINT8_MAX;
 
-  return 0;
+  uint32_t grid_pos = gx * blocks->block_side * blocks->grid_side * blocks->block_side + gy * blocks->block_side;
+
+  for (uint32_t x = 0; x < blocks->block_side; x++)
+    {
+      for (uint32_t y = 0; y < blocks->block_side; y++)
+        {
+          uint64_t state = blocks->states[grid_pos + x * blocks->block_side * blocks->grid_side + y];
+          uint8_t entropy = entropy_compute (state);
+          if (entropy < min_entropy)
+            {
+              min_entropy = entropy;
+              the_location.x = x;
+              the_location.y = y;
+            }
+        }
+    }
+  return blocks->states[ grid_pos + the_location.x * blocks->block_side * blocks->grid_side + the_location.y ];
 }
 
 static inline uint64_t
