@@ -37,10 +37,19 @@ entropy_collapse_state (uint64_t state, uint32_t gx, uint32_t gy, uint32_t x,
   return 0;
 }
 
+// Compute the entropy of a state
 uint8_t
 entropy_compute (uint64_t state)
 {
-  return 0;
+    uint8_t entropy = 0;
+    for (uint8_t i = 0; i < 64; i++)
+    {
+        if (state & (1 << i))
+        {
+            entropy++;
+        }
+    }
+    return entropy;
 }
 
 void
