@@ -1,3 +1,4 @@
+#include <stdint.h>
 #define _GNU_SOURCE
 
 #include "bitfield.h"
@@ -125,10 +126,24 @@ blk_filter_mask_for_block (wfc_blocks_ptr blocks, uint32_t gy, uint32_t gx,
   return 0;
 }
 
+/* check if all state are different in the same column
+   return false if no repetition (correct) else true */
 bool
-grd_check_error_in_column (wfc_blocks_ptr blocks, uint32_t gx)
+grd_check_error_in_column (wfc_blocks_ptr blocks, uint32_t gy)
 {
-  return 0;
+  uint64_t len = blocks->grid_side * blocks->block_side;
+  bool *check_tab = calloc (len, sizeof (bool));
+  uint64_t *start_column = grd_at (blocks, 0, gy);
+  for (uint32_t j = 0; j < len; j++)
+    {
+      uint64_t cell = check_tab[*start_column + (j * len)];
+      if (!cell)
+        return true;
+      check_tab[*start_column + (j * len)] = true;
+    }
+
+  free (check_tab);
+  return false;
 }
 
 void
