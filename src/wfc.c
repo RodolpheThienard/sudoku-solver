@@ -1,8 +1,8 @@
 #include <stdint.h>
 #define _GNU_SOURCE
 
-#include "bitfield.h"
 #include "wfc.h"
+#include "bitfield.h"
 /* #include "utils.h" */
 #include "md5.h"
 
@@ -105,24 +105,48 @@ blk_min_entropy (const wfc_blocks_ptr blocks, uint32_t gx, uint32_t gy)
          + the_location.y;
 }
 
+// Remove the collapsed value from the possible states in the column
 static inline uint64_t
 blk_filter_mask_for_column (wfc_blocks_ptr blocks, uint32_t gy, uint32_t y,
                             uint64_t collapsed)
 {
+  for (uint32_t gx = 0; gx < blocks->grid_side; gx++)
+    {
+      for (uint32_t x = 0; x < blocks->block_side; x++)
+        {
+          *blk_at (blocks, gx, gy, x, y) &= ~(1ull << collapsed - 1);
+        }
+    }
   return 0;
 }
 
+// Remove the collapsed value from the possible states in the row
 static inline uint64_t
 blk_filter_mask_for_row (wfc_blocks_ptr blocks, uint32_t gx, uint32_t x,
                          uint64_t collapsed)
 {
+  for (uint32_t gy = 0; gy < blocks->grid_side; gy++)
+    {
+      for (uint32_t y = 0; y < blocks->block_side; y++)
+        {
+          *blk_at (blocks, gx, gy, x, y) &= ~(1ull << collapsed - 1);
+        }
+    }
   return 0;
 }
 
+// Remove the collapsed value from the possible states in the block
 static inline uint64_t
 blk_filter_mask_for_block (wfc_blocks_ptr blocks, uint32_t gy, uint32_t gx,
                            uint64_t collapsed)
 {
+  for (uint32_t x = 0; x < blocks->block_side; x++)
+    {
+      for (uint32_t y = 0; y < blocks->block_side; y++)
+        {
+          *blk_at (blocks, gx, gy, x, y) &= ~(1ull << collapsed - 1);
+        }
+    }
   return 0;
 }
 
