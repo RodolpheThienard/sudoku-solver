@@ -1,7 +1,7 @@
 #define _GNU_SOURCE
 
-#include "wfc.h"
 #include "bitfield.h"
+#include "wfc.h"
 /* #include "utils.h" */
 #include "md5.h"
 
@@ -41,7 +41,7 @@ entropy_collapse_state (uint64_t state, uint32_t gx, uint32_t gy, uint32_t x,
 uint8_t
 entropy_compute (uint64_t state)
 {
-    return __builtin_popcount (state);
+  return __builtin_popcount (state);
 }
 
 void
@@ -83,13 +83,14 @@ blk_min_entropy (const wfc_blocks_ptr blocks, uint32_t gx, uint32_t gy)
   vec2 the_location = { 0 };
   uint8_t min_entropy = UINT8_MAX;
 
-  uint32_t grid_pos = gx * blocks->block_side * blocks->grid_side * blocks->block_side + gy * blocks->block_side;
+  uint64_t *grid_pos = grd_at (blocks, gx, gy);
 
   for (uint32_t x = 0; x < blocks->block_side; x++)
     {
       for (uint32_t y = 0; y < blocks->block_side; y++)
         {
-          uint64_t state = blocks->states[grid_pos + x * blocks->block_side * blocks->grid_side + y];
+          uint64_t state
+              = *grid_pos + (x * blocks->block_side * blocks->grid_side + y);
           uint8_t entropy = entropy_compute (state);
           if (entropy < min_entropy)
             {
@@ -99,7 +100,8 @@ blk_min_entropy (const wfc_blocks_ptr blocks, uint32_t gx, uint32_t gy)
             }
         }
     }
-  return blocks->states[ grid_pos + the_location.x * blocks->block_side * blocks->grid_side + the_location.y ];
+  return *grid_pos + the_location.x * blocks->block_side * blocks->grid_side
+         + the_location.y;
 }
 
 static inline uint64_t
