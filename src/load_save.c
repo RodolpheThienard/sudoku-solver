@@ -240,8 +240,7 @@ wfc_save_into (const wfc_blocks_ptr blocks, const char data[],
   else if ((folder[folder_len - 1] == '/' && file_name[0] != '/')
            || (folder[folder_len - 1] != '/' && file_name[0] == '/'))
     {
-      snprintf (destination, 1023, "%s%.*s.%lu.save", folder, (int)length,
-                file_name, blocks->states[0]);
+      snprintf (destination, 1023, "%s%.*s.%lu.save", folder, (int)length, file_name, blocks->states[0]);
     }
   else
     {
@@ -284,3 +283,29 @@ wfc_save_into (const wfc_blocks_ptr blocks, const char data[],
   fprintf (stdout, "saved successfully %lu states\n", ends);
   fclose (f);
 }
+
+void
+print_mask(uint64_t mask, int range)
+{
+    for (int i = range; i > 0; i--)
+    {
+        printf("%d", (mask >> i) & 1);
+    }
+}
+
+void
+print_grd(const wfc_blocks_ptr blocks)
+{
+    for (uint32_t x = 0; x < blocks->grid_side*blocks->block_side; x++)
+    {
+        for (uint32_t y = 0; y < blocks->grid_side * blocks->block_side; y++)
+        {
+            printf("|");
+            print_mask(blocks->states[x*blocks->grid_side*blocks->block_side + y], 9);
+            printf("|");
+        }
+      printf("\n");
+    }
+}
+
+
