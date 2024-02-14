@@ -95,3 +95,9 @@ static const wfc_solver solvers[] = {
   { "cuda", solve_cuda },
 #endif
 };
+
+// Prints
+
+void print_mask(uint64_t mask, int range);
+void print_grd(const wfc_blocks_ptr blocks);
+
