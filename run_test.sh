@@ -44,7 +44,7 @@ test(){
     do
         if [ -f sudoku ] 
         then
-            build/sudoku $file_name
+            build/sudoku $file_name -s 0
         else 
             no_comp
         fi
