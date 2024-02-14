@@ -190,11 +190,14 @@ wfc_load (uint64_t seed, const char *path)
           exit (EXIT_FAILURE);
         }
 
-      const uint64_t collapsed = to_u64 (str_state);
+      uint64_t collapsed = to_u64 (str_state);
+      collapsed = bitfield_set (0, (uint8_t)collapsed - 1);
+      uint64_t *restrict const blk_ptr = blk_at (ret, gx, gy, x, y);
+      *blk_ptr = collapsed;
       blk_propagate (ret, gx, gy, x, y, collapsed);
       grd_propagate_column (ret, gx, gy, x, y, collapsed);
       grd_propagate_row (ret, gx, gy, x, y, collapsed);
-      *blk_at (ret, gx, gy, x, y) = bitfield_set (0, (uint8_t)collapsed - 1);
+      *blk_ptr = collapsed;
       if (grd_check_error_in_column (ret, gx))
         {
           fprintf (stderr,
@@ -287,7 +290,7 @@ wfc_save_into (const wfc_blocks_ptr blocks, const char data[],
 void
 print_mask(uint64_t mask, int range)
 {
-    for (int i = range; i > 0; i--)
+    for (int i = range-1; i >= 0; i--)
     {
         printf("%d", (mask >> i) & 1);
     }
