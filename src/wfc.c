@@ -183,11 +183,14 @@ blk_filter_mask_for_block (wfc_blocks_ptr blocks, uint32_t gy, uint32_t gx,
   return idx;
 }
 
+
+// -------------- TODO ---------------------
 /* check if all state are different in the same column
    return false if no repetition (correct) else true */
 bool
 grd_check_error_in_column (wfc_blocks_ptr blocks, uint32_t gy)
 {
+    return false;
   uint64_t len = blocks->grid_side * blocks->block_side;
   bool *check_tab = calloc (len, sizeof (bool));
   uint64_t *start_column = grd_at (blocks, 0, gy);
@@ -212,8 +215,8 @@ blk_propagate (wfc_blocks_ptr blocks, uint32_t gx, uint32_t gy, uint32_t x, uint
     vec2 stack_grd[blocks->block_side * blocks->block_side * blocks->grid_side];
     uint32_t idx = 0;
     idx = blk_filter_mask_for_block (blocks, gy, gx, collapsed, stack_blk, stack_grd, idx);
-    idx = blk_filter_mask_for_column (blocks, gx, y, collapsed, stack_blk, stack_grd, idx);
-    idx = blk_filter_mask_for_row (blocks, gy, x, collapsed, stack_blk, stack_grd, idx);
+    idx = blk_filter_mask_for_column (blocks, gy, y, collapsed, stack_blk, stack_grd, idx);
+    idx = blk_filter_mask_for_row (blocks, gx, x, collapsed, stack_blk, stack_grd, idx);
 
     while (idx)
     {

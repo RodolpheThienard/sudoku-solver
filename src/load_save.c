@@ -287,7 +287,7 @@ wfc_save_into (const wfc_blocks_ptr blocks, const char data[],
 void
 print_mask(uint64_t mask, int range)
 {
-    for (int i = range; i > 0; i--)
+    for (int i = range-1; i >= 0; i--)
     {
         printf("%d", (mask >> i) & 1);
     }
