@@ -88,7 +88,7 @@ wfc_clone_into (wfc_blocks_ptr *const restrict ret_ptr, uint64_t seed,
     }
 
   memcpy (ret, blocks, size);
-  ret->states[0] = seed;
+  ret->seed= seed;
   *ret_ptr = ret;
 }
 
