@@ -106,48 +106,81 @@ blk_min_entropy (const wfc_blocks_ptr blocks, uint32_t gx, uint32_t gy)
 }
 
 // Remove the collapsed value from the possible states in the column
-static inline uint64_t
+static inline uint32_t
 blk_filter_mask_for_column (wfc_blocks_ptr blocks, uint32_t gy, uint32_t y,
-                            uint64_t collapsed)
+                            uint64_t collapsed, vec2 *stack_blk, vec2 *stack_grd, uint32_t idx)
 {
+    uint32_t old_entropy = 0;
+    uint32_t new_entropy = 0;
   for (uint32_t gx = 0; gx < blocks->grid_side; gx++)
     {
       for (uint32_t x = 0; x < blocks->block_side; x++)
         {
-          *blk_at (blocks, gx, gy, x, y) &= ~(1ull << collapsed - 1);
+            old_entropy = entropy_compute (*blk_at (blocks, gx, gy, x, y));
+          *blk_at (blocks, gx, gy, x, y) &= ~(1ull << (collapsed - 1));
+          new_entropy = entropy_compute (*blk_at (blocks, gx, gy, x, y));
+          if (old_entropy == 2 && new_entropy == 1)
+            {
+                stack_blk[idx].x = x;
+                stack_blk[idx].y = y;
+                stack_grd[idx].x = gx;
+                stack_grd[idx].y = gy;
+            }
         }
     }
-  return 0;
+  return idx;
 }
 
 // Remove the collapsed value from the possible states in the row
-static inline uint64_t
+static inline uint32_t
 blk_filter_mask_for_row (wfc_blocks_ptr blocks, uint32_t gx, uint32_t x,
-                         uint64_t collapsed)
+                         uint64_t collapsed, vec2 *stack_blk, vec2 *stack_grd, uint32_t idx)
 {
+    uint32_t old_entropy = 0;
+    uint32_t new_entropy = 0;
   for (uint32_t gy = 0; gy < blocks->grid_side; gy++)
     {
       for (uint32_t y = 0; y < blocks->block_side; y++)
         {
-          *blk_at (blocks, gx, gy, x, y) &= ~(1ull << collapsed - 1);
+            old_entropy = entropy_compute (*blk_at (blocks, gx, gy, x, y));
+          *blk_at (blocks, gx, gy, x, y) &= ~(1ull << (collapsed - 1));
+          new_entropy = entropy_compute (*blk_at (blocks, gx, gy, x, y));
+          if (old_entropy == 2 && new_entropy == 1)
+            {
+                stack_blk[idx].x = x;
+                stack_blk[idx].y = y;
+                stack_grd[idx].x = gx;
+                stack_grd[idx].y = gy;
+            }
         }
     }
-  return 0;
+  return idx;
 }
 
 // Remove the collapsed value from the possible states in the block
-static inline uint64_t
+static inline uint32_t
 blk_filter_mask_for_block (wfc_blocks_ptr blocks, uint32_t gy, uint32_t gx,
-                           uint64_t collapsed)
+                           uint64_t collapsed, vec2 *stack_blk, vec2 *stack_grd, uint32_t idx)
 {
+    uint32_t old_entropy = 0;
+    uint32_t new_entropy = 0;
   for (uint32_t x = 0; x < blocks->block_side; x++)
     {
       for (uint32_t y = 0; y < blocks->block_side; y++)
         {
-          *blk_at (blocks, gx, gy, x, y) &= ~(1ull << collapsed - 1);
+            old_entropy = entropy_compute (*blk_at (blocks, gx, gy, x, y));
+          *blk_at (blocks, gx, gy, x, y) &= ~(1ull << (collapsed - 1));
+            new_entropy = entropy_compute (*blk_at (blocks, gx, gy, x, y));
+            if (old_entropy == 2 && new_entropy == 1)
+            {
+                stack_blk[idx].x = x;
+                stack_blk[idx].y = y;
+                stack_grd[idx].x = gx;
+                stack_grd[idx].y = gy;
+            }
         }
     }
-  return 0;
+  return idx;
 }
 
 /* check if all state are different in the same column
@@ -170,23 +203,46 @@ grd_check_error_in_column (wfc_blocks_ptr blocks, uint32_t gy)
   return false;
 }
 
+// remove the collapsed value from the possible states in the block
 void
-blk_propagate (wfc_blocks_ptr blocks, uint32_t gx, uint32_t gy,
+blk_propagate (wfc_blocks_ptr blocks, uint32_t gx, uint32_t gy, uint32_t x, uint32_t y,
                uint64_t collapsed)
 {
-  return 0;
+    vec2 stack_blk[blocks->block_side * blocks->block_side * blocks->grid_side];
+    vec2 stack_grd[blocks->block_side * blocks->block_side * blocks->grid_side];
+    uint32_t idx = 0;
+    idx = blk_filter_mask_for_block (blocks, gy, gx, collapsed, stack_blk, stack_grd, idx);
+    idx = blk_filter_mask_for_column (blocks, gx, y, collapsed, stack_blk, stack_grd, idx);
+    idx = blk_filter_mask_for_row (blocks, gy, x, collapsed, stack_blk, stack_grd, idx);
+
+    while (idx)
+    {
+        uint32_t cur_x = stack_blk[idx].x;
+        uint32_t cur_y = stack_blk[idx].y;
+        uint32_t cur_gx = stack_grd[idx].x;
+        uint32_t cur_gy = stack_grd[idx].y;
+
+        uint64_t cur_collapsed = *blk_at (blocks, cur_gx, cur_gy, cur_x, cur_y);
+
+        idx--;
+
+        idx = blk_filter_mask_for_block (blocks, cur_gy, cur_gx, cur_collapsed, stack_blk, stack_grd, idx);
+        idx = blk_filter_mask_for_column (blocks, cur_gy, cur_y, cur_collapsed, stack_blk, stack_grd, idx);
+        idx = blk_filter_mask_for_row (blocks, cur_gx, cur_x, cur_collapsed, stack_blk, stack_grd, idx);
+        
+        *blk_at (blocks, cur_gx, cur_gy, cur_x, cur_y) = cur_collapsed;
+    }
 }
 
 void
 grd_propagate_row (wfc_blocks_ptr blocks, uint32_t gx, uint32_t gy, uint32_t x,
                    uint32_t y, uint64_t collapsed)
 {
-  return 0;
 }
 
 void
 grd_propagate_column (wfc_blocks_ptr blocks, uint32_t gx, uint32_t gy,
                       uint32_t x, uint32_t y, uint64_t collapsed)
 {
-  return 0;
 }
+
