@@ -299,12 +299,17 @@ print_mask(uint64_t mask, int range)
 void
 print_grd(const wfc_blocks_ptr blocks)
 {
+    uint32_t range = blocks->block_side * blocks->block_side;
     for (uint32_t x = 0; x < blocks->grid_side*blocks->block_side; x++)
     {
+        if (x % blocks->block_side == 0)
+            printf("\n");
         for (uint32_t y = 0; y < blocks->grid_side * blocks->block_side; y++)
         {
+            if (y % blocks->block_side == 0)
+                printf(" ");
             printf("|");
-            print_mask(blocks->states[x*blocks->grid_side*blocks->block_side + y], 9);
+            print_mask(blocks->states[x*blocks->grid_side*blocks->block_side + y], range);
             printf("|");
         }
       printf("\n");
