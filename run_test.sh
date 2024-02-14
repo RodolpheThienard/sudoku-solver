@@ -40,15 +40,12 @@ output(){
 }
 
 test(){
-    for sudoku in build/sudoku*
-    do
-        if [ -f sudoku ] 
+        if [ -f build/wfc ] 
         then
-            build/sudoku $file_name -s 0
+            build/wfc -s1 $file
         else 
             no_comp
         fi
-    done
 }
 
 ok(){
