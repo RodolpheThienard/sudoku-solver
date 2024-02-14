@@ -27,7 +27,7 @@ printf '_%.0s' {1..50}
 printf '\n'
 
 name(){
-    name_file=$(echo "$file" | cut -f 2 -d "/")
+    name_file=$(echo "$name" | cut -f 2 -d "/")
     # printable_name=$(echo "${name_file}" |cut -c -10)
     printf "%17s\t" $name_file
     # echo -e -n "$printable_name \t"
@@ -35,11 +35,27 @@ name(){
 
 output(){
     name
-    error
+    test
+    # error
+}
+
+test(){
+    for sudoku in build/sudoku*
+    do
+        if [ -f sudoku ] 
+        then
+            build/sudoku $file_name
+        else 
+            no_comp
+        fi
+    done
 }
 
 ok(){
     echo -e -n "${GREEN}OK${NC}\t"
+}
+no_comp(){
+    echo -e -n "${RED}No Comp${NC}\t"
 }
 error(){
     echo -e -n "${RED}ERROR${NC}\t"
@@ -57,6 +73,7 @@ for file in data/*.data
 do
     if [ -f $file ]
     then
+        name=${file%.*}
         output
     else
         echo -e "${RED}No test${NC}"
