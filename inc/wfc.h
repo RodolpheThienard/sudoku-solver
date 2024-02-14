@@ -70,7 +70,7 @@ uint64_t entropy_collapse_state (uint64_t, uint32_t, uint32_t, uint32_t,
                                  uint32_t, uint64_t, uint64_t);
 
 // Propagation functions
-void blk_propagate (wfc_blocks_ptr, uint32_t, uint32_t, uint64_t);
+void blk_propagate (wfc_blocks_ptr, uint32_t, uint32_t, uint32_t, uint32_t, uint64_t);
 void grd_propagate_column (wfc_blocks_ptr, uint32_t, uint32_t, uint32_t,
                            uint32_t, uint64_t);
 void grd_propagate_row (wfc_blocks_ptr, uint32_t, uint32_t, uint32_t, uint32_t,

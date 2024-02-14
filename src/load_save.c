@@ -191,10 +191,10 @@ wfc_load (uint64_t seed, const char *path)
         }
 
       const uint64_t collapsed = to_u64 (str_state);
-      *blk_at (ret, gx, gy, x, y) = collapsed;
-      blk_propagate (ret, gx, gy, collapsed);
+      blk_propagate (ret, gx, gy, x, y, collapsed);
       grd_propagate_column (ret, gx, gy, x, y, collapsed);
       grd_propagate_row (ret, gx, gy, x, y, collapsed);
+      *blk_at (ret, gx, gy, x, y) = bitfield_set (0, (uint8_t)collapsed - 1);
       if (grd_check_error_in_column (ret, gx))
         {
           fprintf (stderr,
