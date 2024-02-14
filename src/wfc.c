@@ -14,6 +14,7 @@
 #include <strings.h>
 #include <sys/stat.h>
 
+// Choose randomlly the collapsed state of a block
 uint64_t
 entropy_collapse_state (uint64_t state, uint32_t gx, uint32_t gy, uint32_t x,
                         uint32_t y, uint64_t seed, uint64_t iteration)
@@ -35,6 +36,20 @@ entropy_collapse_state (uint64_t state, uint32_t gx, uint32_t gy, uint32_t x,
 
   md5 ((uint8_t *)&random_state, sizeof (random_state), digest);
 
+  uint8_t entropy = entropy_compute (state);
+  random_number = (*(uint64_t *)digest) % entropy;
+
+  for (uint8_t i = 0; i < 64; i++)
+    {
+      if (state & (1ULL << i))
+        {
+          if (random_number == 0)
+            {
+              return (uint64_t)1 << i;
+            }
+          random_number--;
+        }
+    }
   return 0;
 }
 
