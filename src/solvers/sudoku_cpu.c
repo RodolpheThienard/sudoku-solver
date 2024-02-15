@@ -16,9 +16,9 @@ solve_cpu (wfc_blocks_ptr blocks)
     uint64_t state;
   } row_changes[blocks->grid_side];
 
-  entropy_location min;
-  entropy_location blk_entropy;
-  vec2 grd_location;
+  entropy_location min = {0, 0};
+  entropy_location blk_entropy = {0, 0};
+  vec2 grd_location = {0, 0};
 
   forever
   {
