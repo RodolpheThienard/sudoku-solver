@@ -73,7 +73,7 @@ uint64_t entropy_collapse_state (uint64_t, uint32_t, uint32_t, uint32_t,
 void all_propagate (wfc_blocks_ptr, uint32_t, uint32_t, uint32_t, uint32_t, uint64_t);
 
 // Check functions
-bool grd_check_error_in_column (wfc_blocks_ptr, uint32_t);
+bool grd_check_error (wfc_blocks_ptr);
 
 // Solvers
 bool solve_cpu (wfc_blocks_ptr);

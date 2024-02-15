@@ -48,9 +48,11 @@ solve_cpu (wfc_blocks_ptr blocks)
     all_propagate (blocks, grd_location.x, grd_location.y, min.location.x, min.location.y, collapsed);
 
     // 3. Check Error
+    
     iteration += 1;
-    if (!changed)
-      break;
+    if (!changed){
+        return grd_check_error (blocks) == false;
+    }
   }
 
   return true;
