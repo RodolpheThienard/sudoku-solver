@@ -98,6 +98,6 @@ static const wfc_solver solvers[] = {
 
 // Prints
 
-void print_mask(uint64_t mask, int range);
-void print_grd(const wfc_blocks_ptr blocks);
+void print_mask(uint64_t mask, uint8_t range);
+void print_grd(const wfc_blocks_ptr blocks, char type);
 

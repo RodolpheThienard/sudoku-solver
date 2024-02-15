@@ -57,7 +57,7 @@ main (int argc, char **argv)
         {
           __atomic_fetch_or (quit_ptr, true, __ATOMIC_SEQ_CST);
           fputs ("\nsuccess with result:\n", stdout);
-          print_grd (blocks);
+          print_grd (blocks, 'v');
           break;
           /* abort (); */
         }
