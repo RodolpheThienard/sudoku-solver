@@ -45,8 +45,7 @@ solve_cpu (wfc_blocks_ptr blocks)
     // 2. Propagate
 
     uint64_t collapsed = *blk_ptr;
-    blk_propagate (blocks, grd_location.x, grd_location.y, min.location.x, min.location.y, collapsed);
-    *blk_ptr = collapsed;
+    all_propagate (blocks, grd_location.x, grd_location.y, min.location.x, min.location.y, collapsed);
 
     // 3. Check Error
     iteration += 1;
