@@ -32,6 +32,8 @@ typedef struct
   uint8_t _2;
   uint32_t _3;
 
+  uint64_t seed;
+
   uint64_t states[];
 } wfc_blocks;
 
