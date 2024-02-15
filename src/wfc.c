@@ -93,31 +93,28 @@ wfc_clone_into (wfc_blocks_ptr *const restrict ret_ptr, uint64_t seed,
 }
 
 // Return the block with the minimum entropy
-uint64_t
+entropy_location
 blk_min_entropy (const wfc_blocks_ptr blocks, uint32_t gx, uint32_t gy)
 {
-  vec2 the_location = { 0 };
-  uint8_t min_entropy = UINT8_MAX;
+  entropy_location min;
+  min.entropy = UINT8_MAX;
 
-  uint64_t *grid_pos = grd_at (blocks, gx, gy);
 
   for (uint32_t x = 0; x < blocks->block_side; x++)
     {
       for (uint32_t y = 0; y < blocks->block_side; y++)
         {
-          uint64_t state
-              = *grid_pos + (x * blocks->block_side * blocks->grid_side + y);
+          uint64_t state = *blk_at (blocks, gx, gy, x, y);
           uint8_t entropy = entropy_compute (state);
-          if (entropy < min_entropy)
+          if (entropy > 1 && entropy <= min.entropy)
             {
-              min_entropy = entropy;
-              the_location.x = x;
-              the_location.y = y;
+              min.entropy = entropy;
+              min.location.x = x;
+              min.location.y = y;
             }
         }
     }
-  return *grid_pos + the_location.x * blocks->block_side * blocks->grid_side
-         + the_location.y;
+  return min;
 }
 
 // Remove the collapsed value from the possible states in the column
