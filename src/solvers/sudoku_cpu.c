@@ -16,48 +16,39 @@ solve_cpu (wfc_blocks_ptr blocks)
     uint64_t state;
   } row_changes[blocks->grid_side];
 
-  vec2 blk_location = { 0 };
-  vec2 grd_location = { 0 };
-
-  uint8_t min_entropy = UINT8_MAX;
-  uint8_t entropy = 0;
-
+  entropy_location min;
+  entropy_location blk_entropy;
+  vec2 grd_location;
 
   forever
   {
     bool changed = false;
-    min_entropy = UINT8_MAX;
+    min.entropy = UINT8_MAX;
     // 1. Collapse
     for (uint32_t gx = 0; gx < blocks->grid_side; gx++){
         for (uint32_t gy = 0; gy < blocks->grid_side; gy++){
-            for (uint32_t x = 0; x < blocks->block_side; x++){
-                for (uint32_t y = 0; y < blocks->block_side; y++){
-                    entropy = entropy_compute (*blk_at (blocks, gx, gy, x, y));
-                    if (entropy > 1 && entropy < min_entropy){
-                        changed = true;
-                        min_entropy = entropy;
-                        blk_location.x = x;
-                        blk_location.y = y;
-                        grd_location.x = gx;
-                        grd_location.y = gy;
-                    }
-                }
+            blk_entropy = blk_min_entropy (blocks, gx, gy);
+            if (blk_entropy.entropy < min.entropy){
+                changed = true;
+                min.entropy = blk_entropy.entropy;
+                min.location.x = blk_entropy.location.x;
+                min.location.y = blk_entropy.location.y;
+                grd_location.x = gx;
+                grd_location.y = gy;
             }
         }
     }
 
-    uint64_t *blk_ptr = blk_at (blocks, grd_location.x, grd_location.y, blk_location.x, blk_location.y);
-    *blk_ptr = entropy_collapse_state (*blk_ptr, grd_location.x, grd_location.y, blk_location.x, blk_location.y, seed, iteration);
+    uint64_t *blk_ptr = blk_at (blocks, grd_location.x, grd_location.y, min.location.x, min.location.y);
+    *blk_ptr = entropy_collapse_state (*blk_ptr, grd_location.x, grd_location.y, min.location.x, min.location.y, seed, iteration);
 
     // 2. Propagate
 
     uint64_t collapsed = *blk_ptr;
-    blk_propagate (blocks, grd_location.x, grd_location.y, blk_location.x, blk_location.y, collapsed);
+    blk_propagate (blocks, grd_location.x, grd_location.y, min.location.x, min.location.y, collapsed);
     *blk_ptr = collapsed;
 
     // 3. Check Error
-
-
     iteration += 1;
     if (!changed)
       break;
