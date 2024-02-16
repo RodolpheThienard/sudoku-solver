@@ -64,20 +64,17 @@ void grd_print (FILE *const, const wfc_blocks_ptr block);
 
 // Entropy functions
 entropy_location blk_min_entropy (const wfc_blocks_ptr block, uint32_t gx,
-                          uint32_t gy);
+                                  uint32_t gy);
 uint8_t entropy_compute (uint64_t);
 uint64_t entropy_collapse_state (uint64_t, uint32_t, uint32_t, uint32_t,
                                  uint32_t, uint64_t, uint64_t);
 
 // Propagation functions
-void blk_propagate (wfc_blocks_ptr, uint32_t, uint32_t, uint32_t, uint32_t, uint64_t);
-void grd_propagate_column (wfc_blocks_ptr, uint32_t, uint32_t, uint32_t,
-                           uint32_t, uint64_t);
-void grd_propagate_row (wfc_blocks_ptr, uint32_t, uint32_t, uint32_t, uint32_t,
-                        uint64_t);
+void all_propagate (wfc_blocks_ptr, uint32_t, uint32_t, uint32_t, uint32_t,
+                    uint64_t);
 
 // Check functions
-bool grd_check_error_in_column (wfc_blocks_ptr, uint32_t);
+bool grd_check_error (wfc_blocks_ptr);
 
 // Solvers
 bool solve_cpu (wfc_blocks_ptr);
@@ -98,6 +95,5 @@ static const wfc_solver solvers[] = {
 
 // Prints
 
-void print_mask(uint64_t mask, uint8_t range);
-void print_grd(const wfc_blocks_ptr blocks, char type);
-
+void print_mask (uint64_t mask, uint8_t range);
+void print_grd (const wfc_blocks_ptr blocks, char type);

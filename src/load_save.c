@@ -193,12 +193,8 @@ wfc_load (uint64_t seed, const char *path)
       uint64_t collapsed = to_u64 (str_state);
       collapsed = bitfield_set (0, (uint8_t)collapsed - 1);
       uint64_t *restrict const blk_ptr = blk_at (ret, gx, gy, x, y);
-      *blk_ptr = collapsed;
-      blk_propagate (ret, gx, gy, x, y, collapsed);
-      grd_propagate_column (ret, gx, gy, x, y, collapsed);
-      grd_propagate_row (ret, gx, gy, x, y, collapsed);
-      *blk_ptr = collapsed;
-      if (grd_check_error_in_column (ret, gx))
+      all_propagate (ret, gx, gy, x, y, collapsed);
+      if (grd_check_error (ret))
         {
           fprintf (stderr,
                    "wrong propagation in block (%u, %u) from (%u, %u)\n", gx,
@@ -243,7 +239,8 @@ wfc_save_into (const wfc_blocks_ptr blocks, const char data[],
   else if ((folder[folder_len - 1] == '/' && file_name[0] != '/')
            || (folder[folder_len - 1] != '/' && file_name[0] == '/'))
     {
-      snprintf (destination, 1023, "%s%.*s.%lu.save", folder, (int)length, file_name, blocks->states[0]);
+      snprintf (destination, 1023, "%s%.*s.%lu.save", folder, (int)length,
+                file_name, blocks->states[0]);
     }
   else
     {
@@ -288,59 +285,62 @@ wfc_save_into (const wfc_blocks_ptr blocks, const char data[],
 }
 
 void
-print_mask(uint64_t mask, uint8_t range)
+print_mask (uint64_t mask, uint8_t range)
 {
-    for (int i = range-1; i >= 0; i--)
+  for (int i = range - 1; i >= 0; i--)
     {
-        printf("%lu", (mask >> i) & 1);
+      printf ("%lu", (mask >> i) & 1);
     }
 }
 
 void
-mask_to_value(uint64_t mask, uint8_t range)
+mask_to_value (uint64_t mask, uint8_t range)
 {
-    for (int i = 0; i < range; i++)
+  for (int i = 0; i < range; i++)
     {
-        if ((mask >> i) & 1){
-            printf("%02d", i+1);
-            return;
-        }
-    }
-    if (mask == 0)
-        printf("  ");
-}
-
-void
-print_grd(const wfc_blocks_ptr blocks, char type)
-{
-    bool binary;
-    if (type == 'v')
-        binary = false;
-    else if (type == 'b')
-        binary = true;
-    else
-    {
-        printf("Invalid type\n");
-        return;
-    }
-    uint8_t range = blocks->block_side * blocks->block_side;
-    for (uint32_t x = 0; x < blocks->grid_side*blocks->block_side; x++)
-    {
-        if (x % blocks->block_side == 0)
-            printf("\n");
-        for (uint32_t y = 0; y < blocks->grid_side * blocks->block_side; y++)
+      if ((mask >> i) & 1)
         {
-            if (y % blocks->block_side == 0)
-                printf(" ");
-            printf("|");
-            if (binary)
-                print_mask(blocks->states[x*blocks->grid_side*blocks->block_side + y], range);
-            else
-                mask_to_value(blocks->states[x*blocks->grid_side*blocks->block_side + y], range);
-            printf("|");
+          printf ("%02d", i + 1);
+          return;
         }
-      printf("\n");
     }
+  if (mask == 0)
+    printf ("  ");
 }
 
-
+void
+print_grd (const wfc_blocks_ptr blocks, char type)
+{
+  bool binary;
+  if (type == 'v')
+    binary = false;
+  else if (type == 'b')
+    binary = true;
+  else
+    {
+      printf ("Invalid type\n");
+      return;
+    }
+  uint8_t range = blocks->block_side * blocks->block_side;
+  for (uint32_t x = 0; x < blocks->grid_side * blocks->block_side; x++)
+    {
+      if (x % blocks->block_side == 0)
+        printf ("\n");
+      for (uint32_t y = 0; y < blocks->grid_side * blocks->block_side; y++)
+        {
+          if (y % blocks->block_side == 0)
+            printf (" ");
+          printf ("|");
+          if (binary)
+            print_mask (
+                blocks->states[x * blocks->grid_side * blocks->block_side + y],
+                range);
+          else
+            mask_to_value (
+                blocks->states[x * blocks->grid_side * blocks->block_side + y],
+                range);
+          printf ("|");
+        }
+      printf ("\n");
+    }
+}
