@@ -16,13 +16,10 @@ GRAY='\033[0;90m\033[1m'
 NC='\033[0m' # No Color
 
 echo -e "${LEXIC}INFO :${NC}"
-# echo -e "  ${LEXIC}SYNTAX${NC} : Comparaison de la syntaxe générée avec celui du lab1"
-# echo -e "  ${LEXIC}COMPIL${NC} : Vérification de la compilation en asm"
-# echo -e "     ${LEXIC}RUN${NC} : Exécution et vérification du code de sortie (42)"
 echo -e "   ${RED}ERROR${NC} : Le test échoue"
-echo -e "      ${GREEN}OK${NC} : Le test réussi"
+echo -e " ${GREEN}SUCCESS${NC} : Le test réussi"
 echo -e "  ${GRAY}ESCAPE${NC} : Le test n'est pas effectué \n"
-printf "%17s\t%5s\n" "TEST FILE NAME" "TODO"
+printf "%17s\t%7s\n" "TEST FILE NAME" "CPU"
 printf '_%.0s' {1..50}
 printf '\n'
 
@@ -33,23 +30,37 @@ name(){
     # echo -e -n "$printable_name \t"
 }
 
-output(){
+pipeline(){
     name
-    test
+    check_file_correct
     # error
+}
+
+check_file_correct (){
+    if [ -f test_output/$name_file ]
+    then
+        test_file=test_output/$name_file
+        test
+        ok
+    else
+        error
+        echo -e -n  "$test_file not found"
+        return 1
+    fi
 }
 
 test(){
         if [ -f build/wfc ] 
         then
-            build/wfc -s1 $file
+            build/wfc -s1 $file > /tmp/result
+            diff /tmp/result $test_file
         else 
             no_comp
         fi
 }
 
 ok(){
-    echo -e -n "${GREEN}OK${NC}\t"
+    echo -e -n "${GREEN}SUCCESS${NC}\t"
 }
 no_comp(){
     echo -e -n "${RED}No Comp${NC}\t"
@@ -62,21 +73,16 @@ escaper(){
 }
 
 
-total(){
-    printf "%17s\t%2s/%2s\t%2s/%2s\t%2s/%2d\n" "TOTAL" "$syntax" "$file_amount" "$compil" $(("$file_amount - $escape_compil")) "$run" $(("$file_amount - $escape_run"))
-}
-
 for file in data/*.data
 do
     if [ -f $file ]
     then
         name=${file%.*}
-        output
+        pipeline
     else
         echo -e "${RED}No test${NC}"
     fi
     echo -e ""
     let file_amount++
 done
-# total
 
