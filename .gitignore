@@ -1,6 +1,7 @@
 .cache/
 build
 BUILD
+gnuplot
 
 # Prerequisites
 *.d
