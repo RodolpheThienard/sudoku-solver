@@ -93,7 +93,6 @@ bench (int argc, char *argv[])
 {
   omp_set_dynamic (false);
 
-  argc = 3;
   wfc_args args = wfc_parse_args (argc, argv);
   const wfc_blocks_ptr init = wfc_load (0, args.data_file);
 
@@ -110,11 +109,10 @@ bench (int argc, char *argv[])
 
   signal (SIGALRM, output_function);
   alarm (300);
-  uint64_t next_seed = 0;
   while (!shouldTerminate)
     {
       pthread_mutex_lock (&seed_mtx);
-      next_seed++;
+      uint64_t next_seed = 0;
       const bool has_next_seed = try_next_seed (&args.seeds, &next_seed);
       pthread_mutex_unlock (&seed_mtx);
 
@@ -125,11 +123,7 @@ bench (int argc, char *argv[])
       if (solved)
         {
           __atomic_fetch_or (quit_ptr, true, __ATOMIC_SEQ_CST);
-          // fputs ("\nsuccess with result:\n", stdout);
-          // print_grd (blocks, 'v');
           counter++;
-          // break;
-          /* abort (); */
         }
       else
         {
