@@ -19,6 +19,7 @@ solve_cpu (wfc_blocks_ptr blocks)
   entropy_location min = { 0, 0 };
   entropy_location blk_entropy = { 0, 0 };
   vec2 grd_location = { 0, 0 };
+  bool error = false;
 
   forever
   {
@@ -51,17 +52,17 @@ solve_cpu (wfc_blocks_ptr blocks)
     // 2. Propagate
 
     uint64_t collapsed = *blk_ptr;
-    all_propagate (blocks, grd_location.x, grd_location.y, min.location.x,
+    error = all_propagate (blocks, grd_location.x, grd_location.y, min.location.x,
                    min.location.y, collapsed);
 
     // 3. Check Error
 
     iteration += 1;
-    if (!changed)
+    if (!changed || error)
       {
-        return grd_check_error (blocks) == false;
+        break;
       }
   }
 
-  return true;
+  return !error;
 }
