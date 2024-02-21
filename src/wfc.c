@@ -14,7 +14,7 @@
 #include <strings.h>
 #include <sys/stat.h>
 
-// Choose randomlly the collapsed state of a block
+// Choose randomly the collapsed state of a block
 uint64_t
 entropy_collapse_state (uint64_t state, uint32_t gx, uint32_t gy, uint32_t x,
                         uint32_t y, uint64_t seed, uint64_t iteration)
@@ -104,8 +104,7 @@ blk_min_entropy (const wfc_blocks_ptr blocks, uint32_t gx, uint32_t gy)
       for (uint32_t y = 0; y < blocks->block_side; y++)
         {
           uint64_t state = *blk_at (blocks, gx, gy, x, y);
-          uint8_t entropy = entropy_compute (state);
-          if (entropy > 1 && entropy <= min.entropy)
+          uint8_t entropy = entropy_compute (state); if (entropy > 1 && entropy <= min.entropy)
             {
               min.entropy = entropy;
               min.location.x = x;
@@ -220,11 +219,12 @@ grd_check_error (wfc_blocks_ptr blocks)
 }
 
 // Remove the collapsed value from the possible states in the column
-static inline uint32_t
+static inline bool
 grd_propagate_column (wfc_blocks_ptr blocks, uint32_t gx, uint32_t gy,
                       uint32_t x, uint32_t y, uint64_t collapsed,
-                      vec2 *stack_blk, vec2 *stack_grd, uint32_t idx)
+                      vec2 *stack_blk, vec2 *stack_grd, uint32_t *idx)
 {
+  bool error = false;
   uint32_t old_entropy = 0;
   uint32_t new_entropy = 0;
   for (uint32_t gx_tmp = 0; gx_tmp < blocks->grid_side; gx_tmp++)
@@ -240,25 +240,32 @@ grd_propagate_column (wfc_blocks_ptr blocks, uint32_t gx, uint32_t gy,
                   = entropy_compute (*blk_at (blocks, gx_tmp, gy, x_tmp, y));
               if (new_entropy == 1)
                 {
-                  stack_blk[idx].x = x_tmp;
-                  stack_blk[idx].y = y;
-                  stack_grd[idx].x = gx_tmp;
-                  stack_grd[idx].y = gy;
-                  idx++;
+                  stack_blk[*idx].x = x_tmp;
+                  stack_blk[*idx].y = y;
+                  stack_grd[*idx].x = gx_tmp;
+                  stack_grd[*idx].y = gy;
+                  (*idx)++;
                 }
+            }
+          else if (collapsed == *blk_at (blocks, gx_tmp, gy, x_tmp, y)
+                   && (gx_tmp != gx || x_tmp != x))
+            {
+              error = true;
+              break;
             }
         }
     }
   *blk_at (blocks, gx, gy, x, y) = collapsed;
-  return idx;
+  return error;
 }
 
 // Remove the collapsed value from the possible states in the row
-static inline uint32_t
+static inline bool
 grd_propagate_row (wfc_blocks_ptr blocks, uint32_t gx, uint32_t gy, uint32_t x,
                    uint32_t y, uint64_t collapsed, vec2 *stack_blk,
-                   vec2 *stack_grd, uint32_t idx)
+                   vec2 *stack_grd, uint32_t *idx)
 {
+  bool error = false;
   uint32_t old_entropy = 0;
   uint32_t new_entropy = 0;
   for (uint32_t gy_tmp = 0; gy_tmp < blocks->grid_side; gy_tmp++)
@@ -274,27 +281,34 @@ grd_propagate_row (wfc_blocks_ptr blocks, uint32_t gx, uint32_t gy, uint32_t x,
                   = entropy_compute (*blk_at (blocks, gx, gy_tmp, x, y_tmp));
               if (new_entropy == 1)
                 {
-                  stack_blk[idx].x = x;
-                  stack_blk[idx].y = y_tmp;
-                  stack_grd[idx].x = gx;
-                  stack_grd[idx].y = gy_tmp;
-                  idx++;
+                  stack_blk[*idx].x = x;
+                  stack_blk[*idx].y = y_tmp;
+                  stack_grd[*idx].x = gx;
+                  stack_grd[*idx].y = gy_tmp;
+                  (*idx)++;
                 }
+            }
+          else if (collapsed == *blk_at (blocks, gx, gy_tmp, x, y_tmp)
+                   && (gy_tmp != gy || y_tmp != y))
+            {
+              error = true;
+              break;
             }
         }
     }
   *blk_at (blocks, gx, gy, x, y) = collapsed;
-  return idx;
+  return error;
 }
 
 // Remove the collapsed value from the possible states in the block
-static inline uint32_t
+static inline bool
 blk_propagate (wfc_blocks_ptr blocks, uint32_t gx, uint32_t gy, uint32_t x,
                uint32_t y, uint64_t collapsed, vec2 *stack_blk,
-               vec2 *stack_grd, uint32_t idx)
+               vec2 *stack_grd, uint32_t *idx)
 {
   uint32_t old_entropy = 0;
   uint32_t new_entropy = 0;
+  bool error = false;
   for (uint32_t x_tmp = 0; x_tmp < blocks->block_side; x_tmp++)
     {
       for (uint32_t y_tmp = 0; y_tmp < blocks->block_side; y_tmp++)
@@ -308,36 +322,41 @@ blk_propagate (wfc_blocks_ptr blocks, uint32_t gx, uint32_t gy, uint32_t x,
                   = entropy_compute (*blk_at (blocks, gx, gy, x_tmp, y_tmp));
               if (new_entropy == 1)
                 {
-                  stack_blk[idx].x = x_tmp;
-                  stack_blk[idx].y = y_tmp;
-                  stack_grd[idx].x = gx;
-                  stack_grd[idx].y = gy;
-                  idx++;
+                  stack_blk[*idx].x = x_tmp;
+                  stack_blk[*idx].y = y_tmp;
+                  stack_grd[*idx].x = gx;
+                  stack_grd[*idx].y = gy;
+                  (*idx)++;
                 }
+            }
+          else if (collapsed == *blk_at (blocks, gx, gy, x_tmp, y_tmp) &&
+                   (x_tmp != x || y_tmp != y))
+            {
+              error = true;
+              break;
             }
         }
     }
   *blk_at (blocks, gx, gy, x, y) = collapsed;
-  return idx;
+  return error;
 }
 
 // remove the collapsed value from the possible states
 // then stack and propagate the newly collapsed blocks
-void
+bool
 all_propagate (wfc_blocks_ptr blocks, uint32_t gx, uint32_t gy, uint32_t x,
                uint32_t y, uint64_t collapsed)
 {
   vec2 stack_blk[blocks->block_side * blocks->block_side * blocks->grid_side];
   vec2 stack_grd[blocks->block_side * blocks->block_side * blocks->grid_side];
-  uint32_t idx = 0;
-  idx = blk_propagate (blocks, gx, gy, x, y, collapsed, stack_blk, stack_grd,
-                       idx);
-  idx = grd_propagate_column (blocks, gx, gy, x, y, collapsed, stack_blk,
-                              stack_grd, idx);
-  idx = grd_propagate_row (blocks, gx, gy, x, y, collapsed, stack_blk,
-                           stack_grd, idx);
-
-  while (idx)
+  bool error = false; 
+  uint32_t idx = 1;
+  stack_blk[0].x = x;
+  stack_blk[0].y = y;
+  stack_grd[0].x = gx;
+  stack_grd[0].y = gy;
+  *blk_at (blocks, gx, gy, x, y) = collapsed;
+  while (idx && !error)
     {
       idx--;
       uint32_t cur_x = stack_blk[idx].x;
@@ -347,13 +366,14 @@ all_propagate (wfc_blocks_ptr blocks, uint32_t gx, uint32_t gy, uint32_t x,
 
       uint64_t cur_collapsed = *blk_at (blocks, cur_gx, cur_gy, cur_x, cur_y);
 
-      idx = blk_propagate (blocks, cur_gx, cur_gy, cur_x, cur_y, cur_collapsed,
-                           stack_blk, stack_grd, idx);
-      idx = grd_propagate_column (blocks, cur_gx, cur_gy, cur_x, cur_y,
-                                  cur_collapsed, stack_blk, stack_grd, idx);
-      idx = grd_propagate_row (blocks, cur_gx, cur_gy, cur_x, cur_y,
-                               cur_collapsed, stack_blk, stack_grd, idx);
+      error |= blk_propagate (blocks, cur_gx, cur_gy, cur_x, cur_y, cur_collapsed,
+                           stack_blk, stack_grd, &idx);
+      error |= grd_propagate_column (blocks, cur_gx, cur_gy, cur_x, cur_y,
+                                  cur_collapsed, stack_blk, stack_grd, &idx);
+      error |= grd_propagate_row (blocks, cur_gx, cur_gy, cur_x, cur_y,
+                               cur_collapsed, stack_blk, stack_grd, &idx);
 
       *blk_at (blocks, cur_gx, cur_gy, cur_x, cur_y) = cur_collapsed;
     }
+  return error;
 }

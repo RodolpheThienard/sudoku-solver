@@ -193,8 +193,7 @@ wfc_load (uint64_t seed, const char *path)
       uint64_t collapsed = to_u64 (str_state);
       collapsed = bitfield_set (0, (uint8_t)collapsed - 1);
       uint64_t *restrict const blk_ptr = blk_at (ret, gx, gy, x, y);
-      all_propagate (ret, gx, gy, x, y, collapsed);
-      if (grd_check_error (ret))
+      if (all_propagate (ret, gx, gy, x, y, collapsed))
         {
           fprintf (stderr,
                    "wrong propagation in block (%u, %u) from (%u, %u)\n", gx,
