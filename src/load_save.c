@@ -295,6 +295,11 @@ print_mask (uint64_t mask, uint8_t range)
 void
 mask_to_value (uint64_t mask, uint8_t range)
 {
+  if (entropy_compute(mask)>1)
+    {
+      printf ("??");
+      return;
+    }
   for (int i = 0; i < range; i++)
     {
       if ((mask >> i) & 1)
