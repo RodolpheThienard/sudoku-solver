@@ -40,7 +40,7 @@ check_file_correct (){
     if [ -f test_output/$name_file ]
     then
         test_file=test_output/$name_file
-        cpu
+        test
         ok
     else
         error
@@ -49,21 +49,11 @@ check_file_correct (){
     fi
 }
 
-cpu(){
+test(){
         if [ -f build/wfc ] 
         then
-            build/wfc -s0-100000 $file > /tmp/result
-            diff /tmp/result $test_file > /tmp/result
-        else 
-            no_comp
-        fi
-}
-
-omp(){
-        if [ -f build/wfc ] 
-        then
-            build/wfc -s0-100000 $file > /tmp/result
-            diff /tmp/result $test_file 
+            build/wfc -s1 $file > /tmp/result
+            diff /tmp/result $test_file
         else 
             no_comp
         fi
