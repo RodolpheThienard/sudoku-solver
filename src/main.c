@@ -86,19 +86,19 @@ main (int argc, char **argv)
                     omp_get_thread_num (), next_seed);
             __atomic_fetch_or (quit_ptr, true, __ATOMIC_SEQ_CST);
             // fputs ("\nsuccess with result:\n", stdout);
-            print_grd (blocks, 'v');
+            // print_grd (blocks, 'v');
             already_solved = true;
             output_solved = 1;
             /* abort (); */
           }
 
-        else if (!*quit_ptr)
-          {
-            fprintf (stdout, "\r%.2f%% -> %.2fs - seed %lu",
-                     ((double)(*iterations_ptr) / (double)(max_iterations))
-                         * 100.0,
-                     omp_get_wtime () - start, next_seed);
-          }
+        // else if (!*quit_ptr)
+        //   {
+        //     fprintf (stdout, "\r%.2f%% -> %.2fs - seed %lu",
+        //              ((double)(*iterations_ptr) / (double)(max_iterations))
+        //                  * 100.0,
+        //              omp_get_wtime () - start, next_seed);
+        //   }
       }
 
       if (solved)

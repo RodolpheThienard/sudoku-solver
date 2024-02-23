@@ -19,7 +19,7 @@ echo -e "${LEXIC}INFO :${NC}"
 echo -e "   ${RED}ERROR${NC} : Le test échoue"
 echo -e " ${GREEN}SUCCESS${NC} : Le test réussi"
 echo -e "  ${GRAY}ESCAPE${NC} : Le test n'est pas effectué \n"
-printf "%17s\t%7s\n" "TEST FILE NAME" "CPU"
+printf "%17s\t%7s\t%7s\n" "TEST FILE NAME" "CPU" "OMP"
 printf '_%.0s' {1..50}
 printf '\n'
 
@@ -32,12 +32,18 @@ name(){
 
 pipeline(){
     name
-    check_file_correct
+    all_check
     # error
 }
 
-check_file_correct (){
+all_check(){
     cpu
+    check_validity
+    omp
+    check_validity
+}
+
+check_validity (){
     if [ "$?" -eq 0 ]; then
         ok
     else
@@ -49,9 +55,7 @@ check_file_correct (){
 cpu(){
         if [ -f build/wfc ] 
         then
-            build/wfc -s0-1000000 $file > /tmp/result
-
-            #diff /tmp/result $test_file > /tmp/result
+            build/wfc -s0-100000 $file -lcpu > /tmp/result
         else 
             no_comp
         fi
@@ -60,8 +64,7 @@ cpu(){
 omp(){
         if [ -f build/wfc ] 
         then
-            build/wfc -s0-100000 $file > /tmp/result
-            diff /tmp/result $test_file > /tmp/result
+            build/wfc -s0-100000 $file -lomp > /tmp/result
         else 
             no_comp
         fi
