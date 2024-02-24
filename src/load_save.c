@@ -56,7 +56,8 @@ static inline wfc_blocks *
 safe_malloc (uint64_t blkcnt)
 {
   uint64_t size = sizeof (wfc_blocks) + sizeof (uint64_t) * blkcnt;
-  wfc_blocks *ret = (wfc_blocks *)malloc (size);
+  wfc_blocks *ret = malloc (sizeof (wfc_blocks));
+  ret->states = malloc (size);
   if (ret != NULL)
     {
       return ret;

@@ -73,6 +73,7 @@ wfc_clone_into (wfc_blocks_ptr *const restrict ret_ptr, uint64_t seed,
         + (grid_size * grid_size * block_size * block_size * sizeof (uint64_t))
         + sizeof (wfc_blocks);
 
+
   if (NULL == ret)
     {
       if (NULL == (ret = malloc (size)))
@@ -87,7 +88,17 @@ wfc_clone_into (wfc_blocks_ptr *const restrict ret_ptr, uint64_t seed,
       exit (EXIT_FAILURE);
     }
 
-  memcpy (ret, blocks, size);
+  if (ret->states)
+    {
+      free (ret->states);
+      ret->states = NULL;
+    }
+  ret->states = (uint64_t *)malloc (size - sizeof (wfc_blocks));
+
+  memcpy (ret->states, blocks->states, size - sizeof (wfc_blocks));
+
+  ret->grid_side = blocks->grid_side;
+  ret->block_side = blocks->block_side;
   ret->seed = seed;
   *ret_ptr = ret;
 }
