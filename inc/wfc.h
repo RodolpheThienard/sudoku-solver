@@ -76,9 +76,11 @@ uint8_t entropy_compute (uint64_t);
 uint64_t entropy_collapse_state (uint64_t, uint32_t, uint32_t, uint32_t,
                                  uint32_t, uint64_t, uint64_t);
 
+#pragma omp declare target
 // Propagation functions
 bool all_propagate (wfc_blocks_ptr, uint32_t, uint32_t, uint32_t, uint32_t,
                     uint64_t);
+#pragma omp end declare target
 
 // Check functions
 bool grd_check_error (wfc_blocks_ptr);
