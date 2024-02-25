@@ -30,7 +30,7 @@ solve_target (wfc_blocks_ptr blocks)
   bool changed = true;
 
     // 1. Collapse
-#pragma omp target map(to: iteration, seed, blocks->grid_side, blocks->block_side, grid_side) map(tofrom: error, device, changed, blocks->states[0:grid_side*grid_side*block_side*block_side], min) 
+#pragma omp target map(to: iteration, seed, blocks->grid_side, blocks->block_side, block_side, grid_side) map(tofrom: error, device, changed, blocks->states[0:grid_side*grid_side*block_side*block_side], min) 
   {
 #pragma omp teams num_teams(1)
       {
