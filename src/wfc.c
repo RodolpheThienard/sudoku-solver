@@ -40,24 +40,16 @@ entropy_collapse_state (uint64_t state, uint32_t gx, uint32_t gy, uint32_t x,
         .seed = seed,
         .iteration = iteration,
     };
-    /* uint8_t *M = (uint8_t *)&random_state; */
-    /* printf("M est LA MON POTE\n"); */
     uint32_t t = random_state.x ^ (random_state.x << 11);
-    random_state.x = random_state.y;
-    random_state.y = random_state.gy;
     random_state.gy = random_state.gy ^ (random_state.gy >> 19) ^ t ^ (t >> 8);
-    uint64_t z = (uint64_t)random_state.gx + random_state.iteration;
+    uint64_t z = (uint64_t)random_state.gx + random_state.iteration + random_state.x + random_state.y;
     z = (z ^ (z >> 21)) + (uint64_t)random_state.gy;
-    z = (z ^ (z << 37)) + (uint64_t)random_state.seed;
+    z = (z ^ (z << 37)) + (uint64_t)random_state.seed + random_state.x - random_state.y;
     z = z ^ (z >> 4);
     z = z * 0x9e3779b97f4a7c13;
     z = z ^ (z >> 30);
 
   /* md5 ((uint8_t *)&random_state, sizeof (random_state), digest); */
-  /* for (int i = 0; i < 16; i++) */
-  /*   { */
-  /*     digest[i] = i; */
-  /*   } */
 
   uint8_t entropy = entropy_compute (state);
   random_number = z % entropy;

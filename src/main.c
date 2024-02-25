@@ -34,17 +34,28 @@ main (int argc, char **argv)
   uint64_t end = 0;
   get_seed_boundaries(args.seeds, &begin, &end);
 
-#pragma omp parallel for schedule(static, 1)
-  for (uint64_t cur_seed = begin; cur_seed < end; cur_seed++)
+  /* for (uint64_t cur_seed = begin; cur_seed < end; cur_seed++) */
+#pragma omp parallel 
+  while(!*quit_ptr)
   {
-      if(*quit_ptr)
+      uint64_t next_seed = 0;
+      bool has_next_seed = true;
+#pragma omp critical
       {
+          next_seed = 0;
+          has_next_seed = try_next_seed(&args.seeds, &next_seed);
+          
+      }
+      if(!has_next_seed)
+      {
+          __atomic_fetch_or (quit_ptr, true, __ATOMIC_SEQ_CST);
           continue;
       }
+
       wfc_blocks_ptr blocks = NULL;
       
 
-      wfc_clone_into (&blocks, cur_seed, init);
+      wfc_clone_into (&blocks, next_seed, init);
       const bool solved = args.solver (blocks);
       __atomic_add_fetch (iterations_ptr, 1, __ATOMIC_SEQ_CST);
 
@@ -61,7 +72,7 @@ main (int argc, char **argv)
               __atomic_fetch_or (quit_ptr, true, __ATOMIC_SEQ_CST);
               fputc ('\n', stdout);
               printf ("\nSolved by thread %d using seed %lu\n",
-                      omp_get_thread_num (), cur_seed);
+                      omp_get_thread_num (), next_seed);
               print_grd (blocks, 'v');
               output_solved = 1;
               wfc_save_into (blocks, args.data_file, args.output_folder);
@@ -69,7 +80,7 @@ main (int argc, char **argv)
           else if (solved)
           {
               printf ("\nSolved by thread %d using seed %lu\n",
-                      omp_get_thread_num (), cur_seed);
+                      omp_get_thread_num (), next_seed);
               __atomic_fetch_or (quit_ptr, true, __ATOMIC_SEQ_CST);
               fputs ("\nsuccess with result:\n", stdout);
               print_grd (blocks, 'v');
@@ -89,7 +100,7 @@ main (int argc, char **argv)
               fprintf (stdout, "\r%.2f%% -> %.2fs - seed %lu - %d threads",
                        ((double)(*iterations_ptr) / (double)(max_iterations))
                            * 100.0,
-                       omp_get_wtime () - start, cur_seed, omp_get_num_threads ());
+                       omp_get_wtime () - start, next_seed, omp_get_num_threads ());
           }
       }
   }  
