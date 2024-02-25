@@ -42,25 +42,10 @@ main (int argc, char **argv)
           continue;
       }
       wfc_blocks_ptr blocks = NULL;
-      bool has_next_seed = true;
-      uint64_t next_seed = 0;
-#pragma omp critical
-      {
-          /* pthread_mutex_lock (&seed_mtx); */
-          next_seed = 0;
-          has_next_seed = try_next_seed (&args.seeds, &next_seed);
-          /* pthread_mutex_unlock (&seed_mtx); */
-
-          /* printf("seed: %lu - thread: %d - has_next_seed: %d\n", next_seed,
-           * omp_get_thread_num(), has_next_seed); */
-      }
-      if (!has_next_seed)
-      {
-          continue;
-      }
+      
 
       /* printf("Thread %d cloning into blocks\n", omp_get_thread_num()); */
-      wfc_clone_into (&blocks, next_seed, init);
+      wfc_clone_into (&blocks, cur_seed, init);
       /* printf("Thread %d attemping to solve using seed %lu\n",
        * omp_get_thread_num(), next_seed); */
       const bool solved = args.solver (blocks);
@@ -80,18 +65,20 @@ main (int argc, char **argv)
               /* printf ("\nThread %d stopped and rejoy from the result of another " */
               /*         "thread\n", */
               /*         omp_get_thread_num ()); */
-              __atomic_fetch_or (quit_ptr, true, __ATOMIC_SEQ_CST);
           }
           else if (solved && args.output_folder != NULL)
           {
               __atomic_fetch_or (quit_ptr, true, __ATOMIC_SEQ_CST);
               fputc ('\n', stdout);
+              printf ("\nSolved by thread %d using seed %lu\n",
+                      omp_get_thread_num (), cur_seed);
+              print_grd (blocks, 'v');
               wfc_save_into (blocks, args.data_file, args.output_folder);
           }
           else if (solved)
           {
               printf ("\nSolved by thread %d using seed %lu\n",
-                      omp_get_thread_num (), next_seed);
+                      omp_get_thread_num (), cur_seed);
               __atomic_fetch_or (quit_ptr, true, __ATOMIC_SEQ_CST);
               fputs ("\nsuccess with result:\n", stdout);
               print_grd (blocks, 'v');
@@ -111,7 +98,7 @@ main (int argc, char **argv)
               fprintf (stdout, "\r%.2f%% -> %.2fs - seed %lu - %d threads",
                        ((double)(*iterations_ptr) / (double)(max_iterations))
                            * 100.0,
-                       omp_get_wtime () - start, next_seed, omp_get_num_threads ());
+                       omp_get_wtime () - start, cur_seed, omp_get_num_threads ());
           }
       }
   }  
