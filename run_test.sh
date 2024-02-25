@@ -19,7 +19,7 @@ echo -e "${LEXIC}INFO :${NC}"
 echo -e "   ${RED}ERROR${NC} : Le test échoue"
 echo -e " ${GREEN}SUCCESS${NC} : Le test réussi"
 echo -e "  ${GRAY}ESCAPE${NC} : Le test n'est pas effectué \n"
-printf "%17s\t%7s\t%7s\n" "TEST FILE NAME" "CPU" "OMP"
+printf "%17s\t%7s\t%7s\t%7s\n" "TEST FILE NAME" "CPU" "OMP" "TARGET"
 printf '_%.0s' {1..50}
 printf '\n'
 
@@ -40,6 +40,8 @@ all_check(){
     cpu
     check_validity
     omp
+    check_validity
+    target
     check_validity
 }
 
@@ -65,6 +67,15 @@ omp(){
         if [ -f build/wfc ] 
         then
             build/wfc -s0-100000 $file -lomp > /tmp/result
+        else 
+            no_comp
+        fi
+}
+
+target(){
+        if [ -f build/wfc ] 
+        then
+            build/wfc -s0-100000 $file -ltarget > /tmp/result
         else 
             no_comp
         fi
