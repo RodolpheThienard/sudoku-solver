@@ -267,29 +267,31 @@ wfc_save_into (const wfc_blocks_ptr blocks, const char data[],
 
   const uint64_t ends = blocks->grid_side * blocks->grid_side * blocks->block_side
              * blocks->block_side;
-  
-  for (uint32_t i = 0; i < blocks->grid_side * blocks->block_side; i ++)
-    {
-        for (uint32_t j = 0; j < blocks->grid_side * blocks->block_side; j ++)
-        {
-            uint64_t mask = blocks->states[i * blocks->grid_side * blocks->block_side + j];
-            uint8_t state = 0;
-            for (uint8_t k = 0; k < blocks->block_side * blocks->block_side; k ++)
-            {
-                if ((mask >> k) & 1)
-                {
-                    state = k + 1;
-                    break;
-                }
-            }
-            if (fprintf (f, "%u ", state) < 0)
-            {
-                fprintf (stderr, "failed to write: %s\n", strerror (errno));
-                exit (EXIT_FAILURE);
-            }
-        }
-        fprintf (f, "\n");
-    }
+  for (uint32_t gx = 0; gx < blocks->grid_side; gx++){
+      for (uint32_t gy = 0; gy < blocks->grid_side; gy++){
+          for (uint32_t x = 0; x < blocks->block_side; x++){
+              for (uint32_t y = 0; y < blocks->block_side; y++){
+                  //convert mask to real state
+                  uint64_t mask = *blk_at (blocks, gx, gy, x, y);
+                  uint8_t state = 0;
+                  for (uint8_t i = 0; i < 64; i += 1)
+                  {
+                      if ((mask >> i) & 1)
+                      {
+                          state = i + 1;
+                          break;
+                      }
+                  }
+                  if(fprintf (f, "%u ", state) < 0)
+                  {
+                      fprintf (stderr, "failed to write: %s\n", strerror (errno));
+                      exit (EXIT_FAILURE);
+                  }
+              }
+          }
+          fprintf (f, "\n");
+      }
+  }
 
   /* for (uint64_t i = 0; i < ends; i += 1) */
   /*   { */

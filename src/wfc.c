@@ -40,24 +40,16 @@ entropy_collapse_state (uint64_t state, uint32_t gx, uint32_t gy, uint32_t x,
         .seed = seed,
         .iteration = iteration,
     };
-    /* uint8_t *M = (uint8_t *)&random_state; */
-    /* printf("M est LA MON POTE\n"); */
     uint32_t t = random_state.x ^ (random_state.x << 11);
-    random_state.x = random_state.y;
-    random_state.y = random_state.gy;
     random_state.gy = random_state.gy ^ (random_state.gy >> 19) ^ t ^ (t >> 8);
-    uint64_t z = (uint64_t)random_state.gx + random_state.iteration;
+    uint64_t z = (uint64_t)random_state.gx + random_state.iteration + random_state.x + random_state.y;
     z = (z ^ (z >> 21)) + (uint64_t)random_state.gy;
-    z = (z ^ (z << 37)) + (uint64_t)random_state.seed;
+    z = (z ^ (z << 37)) + (uint64_t)random_state.seed + random_state.x - random_state.y;
     z = z ^ (z >> 4);
     z = z * 0x9e3779b97f4a7c13;
     z = z ^ (z >> 30);
 
   /* md5 ((uint8_t *)&random_state, sizeof (random_state), digest); */
-  /* for (int i = 0; i < 16; i++) */
-  /*   { */
-  /*     digest[i] = i; */
-  /*   } */
 
   uint8_t entropy = entropy_compute (state);
   random_number = z % entropy;
@@ -85,7 +77,7 @@ entropy_collapse_state (uint64_t state, uint32_t gx, uint32_t gy, uint32_t x,
 uint8_t
 entropy_compute (uint64_t state)
 {
-  return __builtin_popcount (state);
+  return __builtin_popcountll (state);
 }
 #pragma omp end declare target
 
@@ -103,7 +95,7 @@ wfc_clone_into (wfc_blocks_ptr *const restrict ret_ptr, uint64_t seed,
 
   if (NULL == ret)
     {
-      if (NULL == (ret = malloc (size)))
+      if (NULL == (ret = malloc (sizeof(wfc_blocks_ptr))))
         {
           /* fprintf (stderr, "failed to clone blocks structure\n"); */
           /* exit (EXIT_FAILURE); */
@@ -287,7 +279,7 @@ grd_propagate_column (wfc_blocks_ptr blocks, uint32_t gx, uint32_t gy,
             }
         }
     }
-  blocks->states[gx * blocks->grid_side * blocks->block_side * blocks->block_side + gy * blocks->block_side + x * blocks->block_side * blocks->block_side + y] = collapsed;
+  blocks->states[gx * blocks->grid_side * blocks->block_side * blocks->block_side + gy * blocks->block_side + x * blocks->block_side * blocks->grid_side + y] = collapsed;
   return error;
 }
 #pragma omp end declare target
@@ -312,12 +304,12 @@ grd_propagate_row (wfc_blocks_ptr blocks, uint32_t gx, uint32_t gy, uint32_t x,
               continue;
             }
           old_entropy
-              = entropy_compute (blocks->states[gx * blocks->grid_side * blocks->block_side * blocks->block_side + gy_tmp * blocks->block_side + x * blocks->block_side * blocks->block_side + y_tmp]);
+              = entropy_compute (blocks->states[gx * blocks->grid_side * blocks->block_side * blocks->block_side + gy_tmp * blocks->block_side + x * blocks->block_side * blocks->grid_side + y_tmp]);
           if (old_entropy > 1)
             {
-              blocks->states[gx * blocks->grid_side * blocks->block_side * blocks->block_side + gy_tmp * blocks->block_side + x * blocks->block_side * blocks->block_side + y_tmp] &= ~(collapsed);
+              blocks->states[gx * blocks->grid_side * blocks->block_side * blocks->block_side + gy_tmp * blocks->block_side + x * blocks->block_side * blocks->grid_side + y_tmp] &= ~(collapsed);
               new_entropy
-                  = entropy_compute (blocks->states[gx * blocks->grid_side * blocks->block_side * blocks->block_side + gy_tmp * blocks->block_side + x * blocks->block_side * blocks->block_side + y_tmp]);
+                  = entropy_compute (blocks->states[gx * blocks->grid_side * blocks->block_side * blocks->block_side + gy_tmp * blocks->block_side + x * blocks->block_side * blocks->grid_side + y_tmp]);
               if (new_entropy == 1)
                 {
                   stack_blk[idx[0]].x = x;
@@ -327,14 +319,14 @@ grd_propagate_row (wfc_blocks_ptr blocks, uint32_t gx, uint32_t gy, uint32_t x,
                   (idx[0])++;
                 }
             }
-          else if (collapsed == blocks->states[gx * blocks->grid_side * blocks->block_side * blocks->block_side + gy_tmp * blocks->block_side + x * blocks->block_side * blocks->block_side + y_tmp] && (gy_tmp != gy || y_tmp != y))
+          else if (collapsed == blocks->states[gx * blocks->grid_side * blocks->block_side * blocks->block_side + gy_tmp * blocks->block_side + x * blocks->block_side * blocks->grid_side + y_tmp] && (gy_tmp != gy || y_tmp != y))
             {
               error = true;
               continue;
             }
         }
     }
-  blocks->states[gx * blocks->grid_side * blocks->block_side * blocks->block_side + gy * blocks->block_side + x * blocks->block_side * blocks->block_side + y] = collapsed;
+  blocks->states[gx * blocks->grid_side * blocks->block_side * blocks->block_side + gy * blocks->block_side + x * blocks->block_side * blocks->grid_side + y] = collapsed;
   return error;
 }
 #pragma omp end declare target
@@ -358,12 +350,12 @@ blk_propagate (wfc_blocks_ptr blocks, uint32_t gx, uint32_t gy, uint32_t x,
               continue;
             }
           old_entropy
-              = entropy_compute (blocks->states[gx * blocks->grid_side * blocks->block_side * blocks->block_side + gy * blocks->block_side + x_tmp * blocks->block_side * blocks->block_side + y_tmp]);
+              = entropy_compute (blocks->states[gx * blocks->grid_side * blocks->block_side * blocks->block_side + gy * blocks->block_side + x_tmp * blocks->block_side * blocks->grid_side + y_tmp]);
           if (old_entropy > 1)
             {
-              blocks->states[gx * blocks->grid_side * blocks->block_side * blocks->block_side + gy * blocks->block_side + x_tmp * blocks->block_side * blocks->block_side + y_tmp] &= ~(collapsed);
+              blocks->states[gx * blocks->grid_side * blocks->block_side * blocks->block_side + gy * blocks->block_side + x_tmp * blocks->block_side * blocks->grid_side + y_tmp] &= ~(collapsed);
               new_entropy
-                  = entropy_compute (blocks->states[gx * blocks->grid_side * blocks->block_side * blocks->block_side + gy * blocks->block_side + x_tmp * blocks->block_side * blocks->block_side + y_tmp]);
+                  = entropy_compute (blocks->states[gx * blocks->grid_side * blocks->block_side * blocks->block_side + gy * blocks->block_side + x_tmp * blocks->block_side * blocks->grid_side + y_tmp]);
               if (new_entropy == 1)
                 {
                   stack_blk[idx[0]].x = x_tmp;
@@ -373,14 +365,14 @@ blk_propagate (wfc_blocks_ptr blocks, uint32_t gx, uint32_t gy, uint32_t x,
                   (idx[0])++;
                 }
             }
-          else if (collapsed == blocks->states[gx * blocks->grid_side * blocks->block_side * blocks->block_side + gy * blocks->block_side + x_tmp * blocks->block_side * blocks->block_side + y_tmp] && (x_tmp != x || y_tmp != y))
+          else if (collapsed == blocks->states[gx * blocks->grid_side * blocks->block_side * blocks->block_side + gy * blocks->block_side + x_tmp * blocks->block_side * blocks->grid_side + y_tmp] && (x_tmp != x || y_tmp != y))
             {
               error = true;
               continue;
             }
         }
     }
-  blocks->states[gx * blocks->grid_side * blocks->block_side * blocks->block_side + gy * blocks->block_side + x * blocks->block_side * blocks->block_side + y] = collapsed;
+  blocks->states[gx * blocks->grid_side * blocks->block_side * blocks->block_side + gy * blocks->block_side + x * blocks->block_side * blocks->grid_side + y] = collapsed;
   return error;
 }
 #pragma omp end declare target
