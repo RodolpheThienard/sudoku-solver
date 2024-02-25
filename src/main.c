@@ -44,19 +44,9 @@ main (int argc, char **argv)
       wfc_blocks_ptr blocks = NULL;
       
 
-      /* printf("Thread %d cloning into blocks\n", omp_get_thread_num()); */
       wfc_clone_into (&blocks, cur_seed, init);
-      /* printf("Thread %d attemping to solve using seed %lu\n",
-       * omp_get_thread_num(), next_seed); */
       const bool solved = args.solver (blocks);
-      /* printf("Thread %d ended solving using seed %lu\n",
-       * omp_get_thread_num(), next_seed); */
       __atomic_add_fetch (iterations_ptr, 1, __ATOMIC_SEQ_CST);
-      /* if (next_seed == 1 && !solved) */
-      /*   { */
-      /*       printf("Thread %d result on seed 1\n", omp_get_thread_num()); */
-      /*       print_grd(blocks, 'v'); */
-      /*   } */
 
 #pragma omp critical
       {
@@ -73,6 +63,7 @@ main (int argc, char **argv)
               printf ("\nSolved by thread %d using seed %lu\n",
                       omp_get_thread_num (), cur_seed);
               print_grd (blocks, 'v');
+              output_solved = 1;
               wfc_save_into (blocks, args.data_file, args.output_folder);
           }
           else if (solved)
@@ -105,22 +96,6 @@ main (int argc, char **argv)
 
   free (init->states);
   free(init);
-
-  /* printf("init seed: %lu\n", init->seed); */
-  /* if (!result) */
-  /*   { */
-  /*     fprintf (stderr, "No solution found\n"); */
-  /*   } */
-  /* else */
-  /*   { */
-  /*     printf ("Result:\n"); */
-  /*     print_grd (result, 'v'); */
-  /*     if(grd_check_error (result)) */
-  /*       { */
-  /*         printf("Error in the result\n"); */
-  /*       } */
-  /*   } */
-  /* printf("output_solved: %d\n", output_solved); */
 
   return !output_solved;
 }
