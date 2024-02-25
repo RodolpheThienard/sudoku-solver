@@ -75,7 +75,7 @@ get_seed_boundaries (seeds_list *restrict const seeds, uint64_t *from, uint64_t 
                 break;
             case seed_item_tuple:
                 *from = seeds->items[i].content.from;
-                *to = seeds->items[i].content.to;
+                *to = seeds->items[i].content.to + 1;
                 break;
         }
     }
