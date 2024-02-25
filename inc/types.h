@@ -34,7 +34,7 @@ typedef struct
 
   uint64_t seed;
 
-  uint64_t states[];
+  uint64_t *states;
 } wfc_blocks;
 
 typedef wfc_blocks *wfc_blocks_ptr;

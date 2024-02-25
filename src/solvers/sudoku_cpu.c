@@ -10,11 +10,6 @@ solve_cpu (wfc_blocks_ptr blocks)
 {
   uint64_t iteration = 0;
   const uint64_t seed = blocks->seed;
-  struct
-  {
-    uint32_t gy, x, y, _1;
-    uint64_t state;
-  } row_changes[blocks->grid_side];
 
   entropy_location min = { 0, 0 };
   entropy_location blk_entropy = { 0, 0 };
@@ -31,7 +26,7 @@ solve_cpu (wfc_blocks_ptr blocks)
         for (uint32_t gy = 0; gy < blocks->grid_side; gy++)
           {
             blk_entropy = blk_min_entropy (blocks, gx, gy);
-            if (blk_entropy.entropy < min.entropy)
+            if (blk_entropy.entropy <= min.entropy && ~blk_entropy.location.x)
               {
                 changed = true;
                 min.entropy = blk_entropy.entropy;
@@ -43,6 +38,10 @@ solve_cpu (wfc_blocks_ptr blocks)
           }
       }
 
+    if (!changed || error)
+      {
+        break;
+      }
     uint64_t *blk_ptr = blk_at (blocks, grd_location.x, grd_location.y,
                                 min.location.x, min.location.y);
     *blk_ptr = entropy_collapse_state (*blk_ptr, grd_location.x,
@@ -58,10 +57,6 @@ solve_cpu (wfc_blocks_ptr blocks)
     // 3. Check Error
 
     iteration += 1;
-    if (!changed || error)
-      {
-        break;
-      }
   }
 
   return !error;

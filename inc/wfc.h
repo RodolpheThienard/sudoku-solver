@@ -12,6 +12,9 @@
 /// Parses the arguments, prints the help message if needed and abort on error.
 wfc_args wfc_parse_args (int argc, char **argv);
 
+
+void get_seed_boundaries (seeds_list *restrict const seeds, uint64_t *from, uint64_t *to);
+
 /// Get the next seed to try. If there are no more seeds to try, it will exit
 /// the process.
 bool try_next_seed (seeds_list *restrict *const, uint64_t *restrict);
@@ -39,6 +42,7 @@ wfc_control_states_count (uint64_t grid_size, uint64_t block_size)
   return grid_size * grid_size * block_size * block_size;
 }
 
+#pragma omp declare target
 // return target bloc position
 static inline uint64_t *
 grd_at (wfc_blocks_ptr blocks, uint32_t gx, uint32_t gy)
@@ -47,7 +51,9 @@ grd_at (wfc_blocks_ptr blocks, uint32_t gx, uint32_t gy)
                              * blocks->block_side
                          + gy * blocks->block_side];
 }
+#pragma omp end declare target
 
+#pragma omp declare target
 // return target element position
 static inline uint64_t *
 blk_at (wfc_blocks_ptr blocks, uint32_t gx, uint32_t gy, uint32_t x,
@@ -56,6 +62,7 @@ blk_at (wfc_blocks_ptr blocks, uint32_t gx, uint32_t gy, uint32_t x,
   return grd_at (blocks, gx, gy) + x * blocks->block_side * blocks->grid_side
          + y;
 }
+#pragma omp end declare target
 
 // Printing functions
 void blk_print (FILE *const, const wfc_blocks_ptr block, uint32_t gx,

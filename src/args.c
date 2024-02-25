@@ -60,6 +60,27 @@ count_seeds (const seeds_list *restrict const seeds)
   return total;
 }
 
+void
+get_seed_boundaries (seeds_list *restrict const seeds, uint64_t *from, uint64_t *to)
+{
+    *from = 0;
+    *to = 0;
+    for (uint64_t i = 0; i < seeds->count; i += 1)
+    {
+        switch (seeds->items[i].type)
+        {
+            case seed_item_single:
+                *from = seeds->items[i].content.single;
+                *to = *from + 1;
+                break;
+            case seed_item_tuple:
+                *from = seeds->items[i].content.from;
+                *to = seeds->items[i].content.to + 1;
+                break;
+        }
+    }
+}
+
 static inline seeds_list *
 seeds_list_push_item (seeds_list *restrict list, seed_item item)
 {
