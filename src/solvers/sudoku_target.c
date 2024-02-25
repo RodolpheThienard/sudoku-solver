@@ -17,7 +17,7 @@ solve_target (wfc_blocks_ptr blocks)
 {
   uint64_t iteration = 0;
   const uint64_t seed = blocks->seed;
-  printf("Seed: %lu\n", seed);
+  /* printf("Seed: %lu\n", seed); */
 
   entropy_location min;
   min.entropy = UINT8_MAX;
@@ -30,7 +30,7 @@ solve_target (wfc_blocks_ptr blocks)
   bool changed = true;
 
     // 1. Collapse
-#pragma omp target map(to: iteration, seed, blocks->grid_side, blocks->block_side, grid_side) map(tofrom: changed, blocks->states[0:grid_side*grid_side*block_side*block_side], blocks, min) map(from: device, error)
+#pragma omp target map(to: iteration, seed, blocks->grid_side, blocks->block_side, grid_side) map(tofrom: error, device, changed, blocks->states[0:grid_side*grid_side*block_side*block_side], min) 
   {
 #pragma omp teams num_teams(1)
       {
@@ -56,10 +56,10 @@ solve_target (wfc_blocks_ptr blocks)
               mins[i].location.x = 0;
               mins[i].location.y = 0;
           }
+          /* printf("Changed: %d - Error: %d\n", changed, error); */
           while (changed && !error)
           {
               min.entropy = UINT8_MAX;
-              changed = false;
 #pragma omp distribute parallel for collapse(2) private(blk_entropy)
               for (uint32_t gx = 0; gx < grid_side; gx++)
               {
@@ -68,6 +68,7 @@ solve_target (wfc_blocks_ptr blocks)
                       mins[gx * grid_side + gy] = blk_min_entropy (blocks, gx, gy);
                   }
               }
+              changed = false;
               for (uint32_t gx = 0; gx < grid_side; gx++)
               {
                   for (uint32_t gy = 0; gy < grid_side; gy++)
@@ -85,6 +86,7 @@ solve_target (wfc_blocks_ptr blocks)
               }
               /* printf("Thread %d - Iteration %lu - seed %lu changed %d error %d\n", omp_get_thread_num(), iteration, seed, changed, error); */
               /* printf("Coords Grid %d %d - Block %d %d\n", grd_location.x, grd_location.y, min.location.x, min.location.y); */
+              /* printf("Entropy %d\n", min.entropy); */
               /* printf("state %d\n", *blk_ptr); */
               uint64_t collapsed = entropy_collapse_state (blocks->states[grd_location.x * grid_side * block_side *block_side
                                                             + grd_location.y * block_side
@@ -97,10 +99,6 @@ solve_target (wfc_blocks_ptr blocks)
               error = all_propagate (blocks, grd_location.x, grd_location.y, min.location.x, min.location.y, collapsed);
               /* printf("Iteration %lu - seed %lu changed %d\n", iteration, seed, changed); */
               iteration += 1;
-              if (iteration > 1000)
-              {
-                  error = true;
-              }
           }
           free(mins);
       }
