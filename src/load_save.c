@@ -55,8 +55,8 @@ next (char *restrict str, char sep)
 static inline wfc_blocks *
 safe_malloc (uint64_t blkcnt)
 {
-  uint64_t size = sizeof (wfc_blocks) + sizeof (uint64_t) * blkcnt;
-  wfc_blocks *ret = malloc (sizeof (wfc_blocks));
+  uint64_t size = blkcnt * sizeof (uint64_t);
+  wfc_blocks *ret = (wfc_blocks*) malloc (sizeof (wfc_blocks));
   ret->states = malloc (size);
   if (ret != NULL)
     {
@@ -125,8 +125,7 @@ wfc_load (uint64_t seed, const char *path)
       if (line[0] == 's')
         {
           blkcnt = block_side * block_side;
-          ret = safe_malloc (blkcnt
-                             + wfc_control_states_count (1, block_side));
+          ret = safe_malloc (blkcnt);
           ret->block_side = (uint8_t)block_side;
           ret->grid_side = 1u;
         }
@@ -134,8 +133,7 @@ wfc_load (uint64_t seed, const char *path)
         {
           blkcnt = block_side * block_side;
           blkcnt = blkcnt * blkcnt;
-          ret = safe_malloc (
-              blkcnt + wfc_control_states_count (block_side, block_side));
+          ret = safe_malloc ( blkcnt);
           ret->block_side = (uint8_t)block_side;
           ret->grid_side = (uint8_t)block_side;
         }
@@ -159,8 +157,8 @@ wfc_load (uint64_t seed, const char *path)
       {
         mask = bitfield_set (mask, i);
       }
-    ret->states[0] = seed;
-    for (uint64_t i = 0; i < blkcnt + base; i += 1)
+    ret->seed = seed;
+    for (uint64_t i = 0; i < blkcnt; i += 1)
       {
         ret->states[i] = mask;
       }

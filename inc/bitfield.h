@@ -19,6 +19,7 @@ bitfield_get (uint64_t flag, uint8_t index)
   return (flag >> index) & 1llu;
 }
 
+#pragma omp declare target
 /// Count the number of set bits in an integer.
 static inline uint8_t
 bitfield_count (uint64_t x)
@@ -35,6 +36,7 @@ bitfield_count (uint64_t x)
   return (uint8_t)((x * h01) >> 56); // returns left 8 bits of x + (x<<8) +
                                      // (x<<16) + (x<<24) + ...
 }
+#pragma omp end declare target
 
 /// Get the integer with only the nth setted bit of the said integer.
 uint64_t bitfield_only_nth_set (uint64_t, uint8_t);

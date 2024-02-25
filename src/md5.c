@@ -78,6 +78,7 @@ static unsigned char MD5_PADDING[64] = { /* 512 Bits */
 };
 // clang-format on
 
+#pragma omp declare target
 void
 md5 (uint8_t *const restrict M, uint32_t len, uint8_t *restrict digest)
 {
@@ -279,3 +280,4 @@ md5_encode (uint8_t *restrict buffer, struct md5_ctx *restrict context)
   context->regs.C += c;
   context->regs.D += d;
 }
+#pragma omp end declare target
