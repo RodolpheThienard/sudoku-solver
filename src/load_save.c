@@ -232,18 +232,18 @@ wfc_save_into (const wfc_blocks_ptr blocks, const char data[],
   if (folder[folder_len - 1] == '/' && file_name[0] == '/')
     {
       snprintf (destination, 1023, "%.*s%.*s.%lu.save", (int)(folder_len - 1),
-                folder, (int)length, file_name, blocks->states[0]);
+                folder, (int)length, file_name, blocks->seed);
     }
   else if ((folder[folder_len - 1] == '/' && file_name[0] != '/')
            || (folder[folder_len - 1] != '/' && file_name[0] == '/'))
     {
       snprintf (destination, 1023, "%s%.*s.%lu.save", folder, (int)length,
-                file_name, blocks->states[0]);
+                file_name, blocks->seed);
     }
   else
     {
       snprintf (destination, 1023, "%s/%.*s.%lu.save", folder, (int)length,
-                file_name, blocks->states[0]);
+                file_name, blocks->seed);
     }
   fprintf (stdout, "save result to file: %s\n", destination);
 
@@ -265,18 +265,40 @@ wfc_save_into (const wfc_blocks_ptr blocks, const char data[],
       exit (EXIT_FAILURE);
     }
 
-  const uint64_t starts
-      = wfc_control_states_count (blocks->grid_side, blocks->block_side),
-      ends = blocks->grid_side * blocks->grid_side * blocks->block_side
+  const uint64_t ends = blocks->grid_side * blocks->grid_side * blocks->block_side
              * blocks->block_side;
-  for (uint64_t i = 0; i < ends; i += 1)
+  
+  for (uint32_t i = 0; i < blocks->grid_side * blocks->block_side; i ++)
     {
-      if (fprintf (f, "%lu\n", blocks->states[starts + i]) < 0)
+        for (uint32_t j = 0; j < blocks->grid_side * blocks->block_side; j ++)
         {
-          fprintf (stderr, "failed to write: %s\n", strerror (errno));
-          exit (EXIT_FAILURE);
+            uint64_t mask = blocks->states[i * blocks->grid_side * blocks->block_side + j];
+            uint8_t state = 0;
+            for (uint8_t k = 0; k < blocks->block_side * blocks->block_side; k ++)
+            {
+                if ((mask >> k) & 1)
+                {
+                    state = k + 1;
+                    break;
+                }
+            }
+            if (fprintf (f, "%u ", state) < 0)
+            {
+                fprintf (stderr, "failed to write: %s\n", strerror (errno));
+                exit (EXIT_FAILURE);
+            }
         }
+        fprintf (f, "\n");
     }
+
+  /* for (uint64_t i = 0; i < ends; i += 1) */
+  /*   { */
+  /*     if (fprintf (f, "%lu\n", blocks->states[starts + i]) < 0) */
+  /*       { */
+  /*         fprintf (stderr, "failed to write: %s\n", strerror (errno)); */
+  /*         exit (EXIT_FAILURE); */
+  /*       } */
+  /*   } */
 
   fprintf (stdout, "saved successfully %lu states\n", ends);
   fclose (f);
